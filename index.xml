@@ -2,22 +2,22 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>寒枫的博客</title>
-    <link>http://epsilonhf.github.io/</link>
+    <link>https://Hanfeng.ink/</link>
     <description>Recent content on 寒枫的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
     <lastBuildDate>Fri, 18 May 2018 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://epsilonhf.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://Hanfeng.ink/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>信息熵和互信息</title>
-      <link>http://epsilonhf.github.io/post/mutual_information/</link>
+      <link>https://Hanfeng.ink/post/mutual_information/</link>
       <pubDate>Fri, 18 May 2018 00:00:00 +0000</pubDate>
       
-      <guid>http://epsilonhf.github.io/post/mutual_information/</guid>
+      <guid>https://Hanfeng.ink/post/mutual_information/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。&lt;/p&gt;
 &lt;/blockquote&gt;</description>
@@ -25,20 +25,20 @@
     
     <item>
       <title></title>
-      <link>http://epsilonhf.github.io/about/</link>
+      <link>https://Hanfeng.ink/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://epsilonhf.github.io/about/</guid>
+      <guid>https://Hanfeng.ink/about/</guid>
       <description>关于我 email: epsilonhf@outlook.com
 机器学习算法工程师，现居于北京，爱好读书写代码</description>
     </item>
     
     <item>
       <title></title>
-      <link>http://epsilonhf.github.io/archives/</link>
+      <link>https://Hanfeng.ink/archives/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://epsilonhf.github.io/archives/</guid>
+      <guid>https://Hanfeng.ink/archives/</guid>
       <description>title: &amp;ldquo;归档&amp;rdquo; description: 机器学习算法工程师，兴趣广泛 type: archives</description>
     </item>
     

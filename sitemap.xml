@@ -3,48 +3,48 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://epsilonhf.github.io/post/mutual_information/</loc>
+    <loc>https://Hanfeng.ink/post/mutual_information/</loc>
     <lastmod>2018-05-18T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/about/</loc>
+    <loc>https://Hanfeng.ink/about/</loc>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/archives/</loc>
+    <loc>https://Hanfeng.ink/archives/</loc>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/categories/</loc>
+    <loc>https://Hanfeng.ink/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/post/</loc>
-    <lastmod>2018-05-18T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://epsilonhf.github.io/tags/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://epsilonhf.github.io/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/</loc>
+    <loc>https://Hanfeng.ink/post/</loc>
     <lastmod>2018-05-18T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/</loc>
+    <loc>https://Hanfeng.ink/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/</loc>
     <lastmod>2018-05-18T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://epsilonhf.github.io/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
+    <loc>https://Hanfeng.ink/</loc>
+    <lastmod>2018-05-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2018-05-18T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
