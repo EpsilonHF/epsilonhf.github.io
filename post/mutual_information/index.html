@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>信息熵和互信息 | 寒枫的博客</title>
+    <meta property="og:title" content="信息熵和互信息 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2018-05-18T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2018-05-18T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="信息熵和互信息">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="http://epsilonhf.github.io/post/mutual_information/">
+    <link rel="shortcut icon" href="http://epsilonhf.github.io/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="http://epsilonhf.github.io/css/normalize.css">
+    
+        <link rel="stylesheet" href="http://epsilonhf.github.io/css/prism.css">
+    
+    <link rel="stylesheet" href="http://epsilonhf.github.io/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="http://epsilonhf.github.io/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">云在青天水在瓶</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="http://epsilonhf.github.io/">首页</a>
+                    
+                    <a  href="http://epsilonhf.github.io/books/" title="新书">新书</a>
+                    
+                    <a  href="http://epsilonhf.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="http://epsilonhf.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">信息熵和互信息</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2018年5月18日
+                        </date>
+                        
+                        
+                        <div class="post-content">
+                            <blockquote>
+<p>本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。</p>
+</blockquote>
+
+<h2 id="信息熵的定义">信息熵的定义</h2>
+
+<p>我们考虑一个离散的随机变量x。当我们观察到这个变量的一个具体值的时候，我们 接收到了多少信息呢。<strong>我们对于信息内容的度量将依赖于概率分布p(x)</strong>，因此我们想要寻找一个函数h(x)，它是概率p(x)的单调递减函数，表达了信息的内容。</p>
+
+<p>$h(·)$形式可以这样寻找:如果我们有两个不相关的事件x和y，那么我们观察到两个事件同时发生时获得的信息应该等于观察到事件各自发生时获得的信息之和，即$h(x, y) = h(x) + h(y)$。因为$p(x, y) = p(x)p(y)$，很容易看出h(x)一定与p(x)的对数有关。同时为了保证$h(x) &gt; 0$，设置：</p>
+
+<p>$$h(x) = -log(p(x))$$</p>
+
+<p>现在假设一个发送者想传输一个随机变量的值给接收者。这个过程中，他们传输的平均信息量的期望值这个期望值为：</p>
+
+<p>$$H(x) = \sum p(x)h(x) = -\sum p(x)log(p(x))$$</p>
+
+<h2 id="从信息学角度看信息熵">从信息学角度看信息熵</h2>
+
+<p>熵的定义在信息学上有实际的应用性质</p>
+
+<p>考虑一个随机变量x。这个随机变量有8种等可能的状态，用二进制来标识x的不同状态，为了把x的值传给接收者，我们需要传输一个3bit的消息。</p>
+
+<p>$H(x) = -8 \times \frac{1}{8}log_2(\frac{1}{8}) = 3$</p>
+
+<h3 id="如果这8种状态不是等可能的呢">如果这8种状态不是等可能的呢？</h3>
+
+<p>如果8种状态不是等可能的，那么用3bit长度的编码来标识不同的状态不是最理想的编码方式。可以调整编码的格式对信息进行压缩，让出现频率高的状态使用长度较短的编码。</p>
+
+<p>使用霍夫曼编码对信息进行压缩：</p>
+
+<p><img src="http://epsilonhf.github.io/image/CLRS_huffman_coding.png" alt="huffamn coding" /></p>
+
+<p><strong>无噪声编码定理：</strong>编码的期望长度不小于随机变量的信息熵。</p>
+
+<h2 id="从概率论的角度看信息熵">从概率论的角度看信息熵</h2>
+
+<p>考虑一个集合，包含N个完全相同的物体，这些物体要被分到若干个箱子中，使得第i个箱子中有$n_i$个物体。</p>
+
+<p>把N个物体分配到箱子中的总方案数量为:</p>
+
+<p>$$W = \frac{N!}{\prod_i n_i!}$$</p>
+
+<p>$H = \frac{\ln W}{N}= \frac{1}{N}\ln N! - \frac{1}{N}\sum_i \ln n_i!$</p>
+
+<p>$N \rightarrow \infty, \ln N! \approx N\ln N - N$</p>
+
+<p>$H = \lim_{N \to \infty} \frac{\ln W}{N} = \ln N - 1 - \sum(\frac{n_i}{N}\ln n_i - \frac{n_i}{N})$</p>
+
+<p>$~~~=-\sum\frac{n_i}{N}\ln \frac{n_i}{N} = -\sum p_i \ln p_i$</p>
+
+<h2 id="相对熵和互信息">相对熵和互信息</h2>
+
+<p>考虑某个未知的分布p(x)，假定我们已经使用一个近似的分布q(x)对它进行了建模。由于我们使用了q(x)而不是真实分布p(x)，因此我们需要附加一些信息，而附加信息的量：</p>
+
+<p>$$KL(p||q) = -\int p(x)\ln q(x)dx + \int p(x)\ln p(x)dx = -\int p(x)\ln \frac{p(x)}{q(x)}dx \geq 0$$</p>
+
+<p>KL散度看做两个分布p(x)和q(x)之间不相似程度的度量，当q(x)和p(x)相同时KL散度为零。</p>
+
+<p>现在我们另$p = p(X,Y), q = p(X)p(Y)$ 根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$ 我们想知道X,Y的独立性</p>
+
+<p>$$I(X;Y) = KL(p(X,Y)||p(X)p(Y)) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+
+<p>我们可以从编码压缩的角度理解KL散度，当我们知道真实的概率分布之后，我们可以给出最有效的压缩。如果我们使用了不同于真实分布的概率分布，那么我们一定会损失编码效率。</p>
+
+<p>MIC(Maximal information coefficient) 最早源自于2011年发表于science上的论文-Detecting Novel Associations in Large Data Sets.是一种衡量两个随机变量之间独立性的参数方法，在介绍MIC之前，我们先来看一下MI(Mutual Information).</p>
+
+<p>假设存在随机变量$x,y$, 我们可以用$R^2$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，我们就必须用其他方法考察他们之间的独立性。</p>
+
+<p>根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$，我们定义互信息MI:</p>
+
+<p>$$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+
+<p>下面我们对$I(X;Y)$进行一定的变形：</p>
+
+<p>$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$</p>
+
+<p>$~~~~~~~~~~~=\int_X\int_Y p(X,Y)\log\frac{p(X,Y)}{p(X)} - \int_X\int_Y p(X,Y)\log p(Y)$</p>
+
+<p>$~~~~~~~~~~~=\int_X\int_Y p(X)p(Y|X)\log p(Y|X) - \int_y p(Y)\log p(Y)$</p>
+
+<p>$~~~~~~~~~~~=\int_X p(X)\int_Yp(Y|X)\log p(Y|X)+H(Y)$</p>
+
+<p>$~~~~~~~~~~~=-\int_X p(X)H(Y|X=x)+H(Y)$</p>
+
+<p>$~~~~~~~~~~~=H(Y)-H(Y|X)$</p>
+
+<p>因此$I(X;Y)$显示了X的引入对于Y的熵的减少量，因而当X和Y独立时，$H(Y)=H(Y|X), I(X;Y)=0$</p>
+
+<h2 id="mic">MIC</h2>
+
+<p>MIC(Maximal information coefficient) 最早源自于2011年发表于science上的论文-Detecting Novel Associations in Large Data Sets.是一种衡量两个随机变量之间独立性的参数方法。</p>
+
+<p>假设存在随机变量$X,Y$, 我们可以用$Cov(X,Y)$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，$Cov(X,Y)$我发准确的反映变量之间的相关性，我们就必须用其他方法考察他们的独立性。</p>
+
+<h3 id="具体方法">具体方法</h3>
+
+<p>假设我们拿到了随机变量$X,Y$的散点图，我们用小方格子去分割图形，保证在每个小方格子里$I(X;Y)$最大，然后对每个网格中$I(X;Y)$进行归一化处理。选取所有$I(X;Y)$中的最大值作为MIC，注意网格数量应小于$n^{0.6}$。</p>
+
+<p>$$MIC(X;Y) = \max\frac{I(X;Y)}{\log_2(\min(|X|,|Y|))}$$</p>
+
+<p><img src="http://epsilonhf.github.io/image/MIC.png" alt="MIC" /></p>
+
+<h3 id="实际应用">实际应用</h3>
+
+<p>先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
+<span style="color:#f92672">from</span> minepy <span style="color:#f92672">import</span> MINE
+<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
+
+x <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>linspace(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1000</span>)
+y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>sin(<span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> np<span style="color:#f92672">.</span>pi <span style="color:#f92672">*</span> x) <span style="color:#f92672">+</span> x 
+noise <span style="color:#f92672">=</span> y <span style="color:#f92672">+</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
+
+mine <span style="color:#f92672">=</span> MINE(alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.6</span>)
+mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#75715e"># mine.mic() = 1</span>
+mine<span style="color:#f92672">.</span>compute_score(x, noise) <span style="color:#75715e"># mine.mic() = 0.81</span></code></pre></div>
+<p><img src="http://epsilonhf.github.io/image/MIC_figure.png" alt="MIC_figure" /></p>
+
+<p>我们可以看到，对于sin曲线的x和y，MIC为1（相关度极高），即使加入噪音进行干扰，MIC依然有0.81。</p>
+
+<p>接下来我们看看MIC对完全独立的随机数的表现。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">x <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
+y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
+mine <span style="color:#f92672">=</span> MINE(alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.6</span>)
+mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#75715e"># mine.mic() = 0.137</span></code></pre></div>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="http://epsilonhf.github.io/archives/"></a></li>
+        
+        <li><a href="http://epsilonhf.github.io/about/"></a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="http://epsilonhf.github.io/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
+                                
+                                <li><a href="http://epsilonhf.github.io/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA">信息论</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "disqus_shortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="http://epsilonhf.github.io/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="http://epsilonhf.github.io/post/mutual_information/" title="信息熵和互信息">信息熵和互信息</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="http://epsilonhf.github.io/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="http://epsilonhf.github.io/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="http://epsilonhf.github.io/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="http://epsilonhf.github.io/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="http://epsilonhf.github.io/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="http://epsilonhf.github.io/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+</body>
+</html>

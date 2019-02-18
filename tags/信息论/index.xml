@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>信息论 on 寒枫的博客</title>
+    <link>http://epsilonhf.github.io/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/</link>
+    <description>Recent content in 信息论 on 寒枫的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Fri, 18 May 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="http://epsilonhf.github.io/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>信息熵和互信息</title>
+      <link>http://epsilonhf.github.io/post/mutual_information/</link>
+      <pubDate>Fri, 18 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>http://epsilonhf.github.io/post/mutual_information/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
