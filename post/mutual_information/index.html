@@ -35,6 +35,10 @@
 
     
     
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
 </head>
 
 <body>
@@ -80,6 +84,17 @@
                             2018年5月18日
                         </date>
                         
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
                         
                         <div class="post-content">
                             <blockquote>
@@ -146,7 +161,7 @@
 
 <p>我们可以从编码压缩的角度理解KL散度，当我们知道真实的概率分布之后，我们可以给出最有效的压缩。如果我们使用了不同于真实分布的概率分布，那么我们一定会损失编码效率。</p>
 
-<p>MIC(Maximal information coefficient) 最早源自于2011年发表于science上的论文-Detecting Novel Associations in Large Data Sets.是一种衡量两个随机变量之间独立性的参数方法，在介绍MIC之前，我们先来看一下MI(Mutual Information).</p>
+<p>接下来，我们先来看一下互信息(Mutual Information)。</p>
 
 <p>假设存在随机变量$x,y$, 我们可以用$R^2$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，我们就必须用其他方法考察他们之间的独立性。</p>
 
@@ -187,26 +202,31 @@
 <h3 id="实际应用">实际应用</h3>
 
 <p>先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
-<span style="color:#f92672">from</span> minepy <span style="color:#f92672">import</span> MINE
-<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
 
-x <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>linspace(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1000</span>)
-y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>sin(<span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> np<span style="color:#f92672">.</span>pi <span style="color:#f92672">*</span> x) <span style="color:#f92672">+</span> x 
-noise <span style="color:#f92672">=</span> y <span style="color:#f92672">+</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
+<pre><code>import numpy as np
+from minepy import MINE
+import matplotlib.pyplot as plt
 
-mine <span style="color:#f92672">=</span> MINE(alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.6</span>)
-mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#75715e"># mine.mic() = 1</span>
-mine<span style="color:#f92672">.</span>compute_score(x, noise) <span style="color:#75715e"># mine.mic() = 0.81</span></code></pre></div>
+x = np.linspace(0, 1, 1000)
+y = np.sin(10 * np.pi * x) + x 
+noise = y + np.random.random(1000)
+
+mine = MINE(alpha=0.6)
+mine.compute_score(x, y) # mine.mic() = 1
+mine.compute_score(x, noise) # mine.mic() = 0.81
+</code></pre>
+
 <p><img src="https://Hanfeng.ink/image/MIC_figure.png" alt="MIC_figure" /></p>
 
 <p>我们可以看到，对于sin曲线的x和y，MIC为1（相关度极高），即使加入噪音进行干扰，MIC依然有0.81。</p>
 
 <p>接下来我们看看MIC对完全独立的随机数的表现。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">x <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
-y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(<span style="color:#ae81ff">1000</span>)
-mine <span style="color:#f92672">=</span> MINE(alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.6</span>)
-mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#75715e"># mine.mic() = 0.137</span></code></pre></div>
+
+<pre><code>x = np.random.random(1000)
+y = np.random.random(1000)
+mine = MINE(alpha=0.6)
+mine.compute_score(x, y) # mine.mic() = 0.137
+</code></pre>
                         </div>
 
                         
@@ -215,9 +235,9 @@ mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/archives/"></a></li>
-        
         <li><a href="https://Hanfeng.ink/about/"></a></li>
+        
+        <li><a href="https://Hanfeng.ink/archives/"></a></li>
         
     </ul>
 </div>
@@ -236,26 +256,7 @@ mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#
                         </div>
                     </article>
                     
-    <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
     
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "disqus_shortname" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
     
     
@@ -287,6 +288,10 @@ mine<span style="color:#f92672">.</span>compute_score(x, y) <span style="color:#
     <section class="widget">
         <h3 class="widget-title">分类</h3>
 <ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(1)</a>
+    </li>
     
 </ul>
     </section>
@@ -356,8 +361,12 @@ if (!doNotTrack) {
 
 
 
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
 
 
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
 
 </body>
 </html>
