@@ -97,9 +97,7 @@
                         </div>
                         
                         <div class="post-content">
-                            <blockquote>
-<p>本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。</p>
-</blockquote>
+                            <p>本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。</p>
 
 <h2 id="信息熵的定义">信息熵的定义</h2>
 
@@ -201,7 +199,7 @@
 
 <h3 id="实际应用">实际应用</h3>
 
-<p>先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
+<p>我们可以使用minepy库，来计算随机变量的MIC。先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
 
 <pre><code>import numpy as np
 from minepy import MINE
@@ -212,8 +210,8 @@ y = np.sin(10 * np.pi * x) + x
 noise = y + np.random.random(1000)
 
 mine = MINE(alpha=0.6)
-mine.compute_score(x, y) # mine.mic() = 1
-mine.compute_score(x, noise) # mine.mic() = 0.81
+mine.compute_score(x, y)      # mine.mic() = 1
+mine.compute_score(x, noise)  # mine.mic() = 0.81
 </code></pre>
 
 <p><img src="https://Hanfeng.ink/image/MIC_figure.png" alt="MIC_figure" /></p>
@@ -235,9 +233,9 @@ mine.compute_score(x, y) # mine.mic() = 0.137
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/about/"></a></li>
-        
         <li><a href="https://Hanfeng.ink/archives/"></a></li>
+        
+        <li><a href="https://Hanfeng.ink/about/"></a></li>
         
     </ul>
 </div>
