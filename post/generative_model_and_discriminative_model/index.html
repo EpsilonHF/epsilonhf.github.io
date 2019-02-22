@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>信息熵和互信息 | 寒枫的博客</title>
-    <meta property="og:title" content="信息熵和互信息 - 寒枫的博客">
+    <title>生成模型和判别模型 | 寒枫的博客</title>
+    <meta property="og:title" content="生成模型和判别模型 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2018-05-18T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2018-12-01T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2018-05-18T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2018-12-01T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="信息熵和互信息">
+    <meta name="description" content="生成模型和判别模型">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/mutual_information/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/generative_model_and_discriminative_model/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,10 +78,10 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">信息熵和互信息</h1>
+                            <h1 class="post-title">生成模型和判别模型</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2018年5月18日
+                            2018年12月1日
                         </date>
                         
                         <div class="post-meta">
@@ -97,134 +97,124 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。</p>
+                            <p>本文总结了生成模型和判别模型的理论基础，及在实际应用中的优劣。</p>
 
-<h2 id="信息熵的定义">信息熵的定义</h2>
+<h3 id="1-生成模型和判别模型的区别">1. 生成模型和判别模型的区别</h3>
 
-<p>我们考虑一个离散的随机变量x。当我们观察到这个变量的一个具体值的时候，我们 接收到了多少信息呢。<strong>我们对于信息内容的度量将依赖于概率分布p(x)</strong>，因此我们想要寻找一个函数h(x)，它是概率p(x)的单调递减函数，表达了信息的内容。</p>
+<h4 id="判别模型">判别模型</h4>
 
-<p>$h(·)$形式可以这样寻找:如果我们有两个不相关的事件x和y，那么我们观察到两个事件同时发生时获得的信息应该等于观察到事件各自发生时获得的信息之和，即$h(x, y) = h(x) + h(y)$。因为$p(x, y) = p(x)p(y)$，很容易看出h(x)一定与p(x)的对数有关。同时为了保证$h(x) &gt; 0$，设置：</p>
+<ol>
+<li>直接计算样本的属于不同类别的条件概率，将概率最高的类别作为最终结果。</li>
+<li>追求分类的结果最好，只需要找到一个性能优秀的分类器。</li>
+</ol>
 
-<p>$$h(x) = -log(p(x))$$</p>
+<h4 id="生成模型">生成模型</h4>
 
-<p>现在假设一个发送者想传输一个随机变量的值给接收者。这个过程中，他们传输的平均信息量的期望值这个期望值为：</p>
+<ol>
+<li>分析数据的分布</li>
+<li>计算数据的概率密度分布</li>
+<li>对数据的分类基于对于数据产生过程的认知</li>
+</ol>
 
-<p>$$H(x) = \sum p(x)h(x) = -\sum p(x)log(p(x))$$</p>
+<h3 id="2-逻辑回归的判别模型解释">2.逻辑回归的判别模型解释</h3>
 
-<h2 id="从信息学角度看信息熵">从信息学角度看信息熵</h2>
+<h4 id="问题">问题：</h4>
 
-<p>熵的定义在信息学上有实际的应用性质</p>
+<p>假设我们需要将样本 $X = [x_1,x_2,&hellip;]$ 分成两类：$C_1,C_2$</p>
 
-<p>考虑一个随机变量x。这个随机变量有8种等可能的状态，用二进制来标识x的不同状态，为了把x的值传给接收者，我们需要传输一个3bit的消息。</p>
+<h4 id="求解的目标">求解的目标：</h4>
 
-<p>$H(x) = -8 \times \frac{1}{8}log_2(\frac{1}{8}) = 3$</p>
+<p>计算条件概率 $P(C_1|X), P(C_2|X)$，比较条件概率的大小，进行归类</p>
 
-<h3 id="如果这8种状态不是等可能的呢">如果这8种状态不是等可能的呢？</h3>
+<h4 id="建立模型">建立模型：</h4>
 
-<p>如果8种状态不是等可能的，那么用3bit长度的编码来标识不同的状态不是最理想的编码方式。可以调整编码的格式对信息进行压缩，让出现频率高的状态使用长度较短的编码。</p>
+<p>假设 $P(C_1|X) = \frac{1}{1+\exp(-WX-b)}$</p>
 
-<p>使用霍夫曼编码对信息进行压缩：</p>
+<p>使用交叉熵作为损失函数：</p>
 
-<p><img src="https://Hanfeng.ink/image/mutual_information/CLRS_huffman_coding.png" alt="huffamn coding" /></p>
+<p>$$\mathcal{L} = -y\log P(C_1|X) - (1-y) \log (1-P(C_1|X))$$</p>
 
-<p><strong>无噪声编码定理：</strong>编码的期望长度不小于随机变量的信息熵。</p>
+<p>使用梯度下降法，得到使损失函数最小的 $w^* ,b^*$。</p>
 
-<h2 id="从概率论的角度看信息熵">从概率论的角度看信息熵</h2>
+<h3 id="3-逻辑回归的生成模型解释">3.逻辑回归的生成模型解释</h3>
 
-<p>考虑一个集合，包含N个完全相同的物体，这些物体要被分到若干个箱子中，使得第i个箱子中有$n_i$个物体。</p>
+<p>根据贝叶斯定理，我们可知：</p>
 
-<p>把N个物体分配到箱子中的总方案数量为:</p>
+<p>$P(C_1|X)= \frac{P(X|C_1)P(C_1)}{P(X)} = \frac{P(X|C_1)P(C_1)}{P(X|C_1)P(C_1) + P(X|C_2)P(C_2)}$</p>
 
-<p>$$W = \frac{N!}{\prod_i n_i!}$$</p>
+<p>X的联合概率分布为：</p>
 
-<p>$H = \frac{\ln W}{N}= \frac{1}{N}\ln N! - \frac{1}{N}\sum_i \ln n_i!$</p>
+<p>$P(X) = P(X|C_1)P(C_1) + P(X|C_2)P(C_2)$</p>
 
-<p>$N \rightarrow \infty, \ln N! \approx N\ln N - N$</p>
+<p>任何一个样本有可能是由 $C_1$生成的，也有可能是由 $C_2$ 生成的。我们需要计算 $P(X|C_1), P(X|C_2)$。</p>
 
-<p>$H = \lim_{N \to \infty} \frac{\ln W}{N} = \ln N - 1 - \sum(\frac{n_i}{N}\ln n_i - \frac{n_i}{N})$</p>
+<h4 id="基础假设">基础假设</h4>
 
-<p>$~~~=-\sum\frac{n_i}{N}\ln \frac{n_i}{N} = -\sum p_i \ln p_i$</p>
+<p>为了简化计算，同时防止参数过多出现过拟合，我们假设 $P(X|C_1), P(X|C_2)$ 为正态分布：</p>
 
-<h2 id="相对熵和互信息">相对熵和互信息</h2>
+<p>$$f_{\mu ,\Sigma} = \frac{1}{(2\pi)^{D/2}} \frac{1}{|\Sigma|^{0.5}}\exp[-\frac{1}{2} (x-\mu)^{\top} \Sigma^{-1}(x-\mu)]$$</p>
 
-<p>考虑某个未知的分布p(x)，假定我们已经使用一个近似的分布q(x)对它进行了建模。由于我们使用了q(x)而不是真实分布p(x)，因此我们需要附加一些信息，而附加信息的量：</p>
+<h4 id="最大似然估计">最大似然估计</h4>
 
-<p>$$KL(p||q) = -\int p(x)\ln q(x)dx + \int p(x)\ln p(x)dx = -\int p(x)\ln \frac{p(x)}{q(x)}dx \geq 0$$</p>
+<p>假设属于类型 $C_1$ 的点为 $X^1, X^2, X^3,&hellip;$ 似然函数为：</p>
 
-<p>KL散度看做两个分布p(x)和q(x)之间不相似程度的度量，当q(x)和p(x)相同时KL散度为零。</p>
+<p>$$L(\mu ,\Sigma) = \prod f_{\mu ,\Sigma}(X^i)$$</p>
 
-<p>现在我们另$p = p(X,Y), q = p(X)p(Y)$ 根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$ 我们想知道X,Y的独立性</p>
+<p>$\mu^* ,\Sigma^* = argmax L(\mu, \Sigma) ~~ &ndash;&gt; ~~ \mu^* = \frac{1}{n}\sum X^i , \Sigma^* = \frac{1}{n}\sum (X-\mu^* )^{\top} (X-\mu^*)$</p>
 
-<p>$$I(X;Y) = KL(p(X,Y)||p(X)p(Y)) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+<p>同理，我们可以算出 $C_2$ 的分布。</p>
 
-<p>我们可以从编码压缩的角度理解KL散度，当我们知道真实的概率分布之后，我们可以给出最有效的压缩。如果我们使用了不同于真实分布的概率分布，那么我们一定会损失编码效率。</p>
+<h4 id="计算边界">计算边界</h4>
 
-<p>接下来，我们先来看一下互信息(Mutual Information)。</p>
+<p>得到 $P(X|C_1), P(X|C_2)$，我们计算 $P(X|C_1) = P(X|C_2)$，得到如下的决策边界</p>
 
-<p>假设存在随机变量$x,y$, 我们可以用$R^2$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，我们就必须用其他方法考察他们之间的独立性。</p>
+<p><img src="https://Hanfeng.ink/image/generative_model_and_discriminative_model/GM_1.png" alt="" /></p>
 
-<p>根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$，我们定义互信息MI:</p>
+<p>假设 $C_1, C_2$ 有相同的协方差矩阵，决策边界变为直线。</p>
 
-<p>$$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+<p><img src="https://Hanfeng.ink/image/generative_model_and_discriminative_model/GM_2.png" alt="" /></p>
 
-<p>下面我们对$I(X;Y)$进行一定的变形：</p>
+<h4 id="数学表达">数学表达</h4>
 
-<p>$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$</p>
+<p>我们先计算样本的条件概率</p>
 
-<p>$~~~~~~~~~~~=\int_X\int_Y p(X,Y)\log\frac{p(X,Y)}{p(X)} - \int_X\int_Y p(X,Y)\log p(Y)$</p>
+<p>$P(C_1|X) =  \frac{P(X|C_1)P(C_1)}{P(X|C_1)P(C_1) + P(X|C_2)P(C_2)} = \frac{1}{1+\frac{P(X|C_2)P(C_2)}{P(X|C_1)P(C_1)}} = \frac{1}{1+exp(-z)} = \sigma(z)$</p>
 
-<p>$~~~~~~~~~~~=\int_X\int_Y p(X)p(Y|X)\log p(Y|X) - \int_y p(Y)\log p(Y)$</p>
+<p>$z = \ln \frac{P(X|C_1)P(C_1)}{P(X|C_2)P(C_2)}=\ln\frac{P(X|C_1)}{P(X|C_2)} + \ln \frac{P(C_2)}{P(C_2)} = \ln\frac{P(X|C_1)}{P(X|C_2)} + \ln \frac{N_1}{N_2}$</p>
 
-<p>$~~~~~~~~~~~=\int_X p(X)\int_Yp(Y|X)\log p(Y|X)+H(Y)$</p>
+<p>根据正态分布的假设，使用极大似然值估计，算出 $P(X|C_1) ~~ P(X|C_2)$。</p>
 
-<p>$~~~~~~~~~~~=-\int_X p(X)H(Y|X=x)+H(Y)$</p>
+<p>$P(X|C_1) =  \frac{1}{(2\pi)^{D/2}} \frac{1}{|\Sigma|^{0.5}}\exp( -\frac{1}{2} (x-\mu_1)^{\top} \Sigma^{-1}(x-\mu_1))$</p>
 
-<p>$~~~~~~~~~~~=H(Y)-H(Y|X)$</p>
+<p>$P(X|C_2) =  \frac{1}{(2\pi)^{D/2}}\frac{1}{|\Sigma|^{0.5}}\exp(-\frac{1}{2} (x-\mu_2)^{\top} \Sigma^{-1}(x-\mu_2))$</p>
 
-<p>因此$I(X;Y)$显示了X的引入对于Y的熵的减少量，因而当X和Y独立时，$H(Y)=H(Y|X), I(X;Y)=0$</p>
+<p>将 $P(X|C_1) ~ P(X|C_2)$ 代入z的表达式，可得：</p>
 
-<h2 id="mic">MIC</h2>
+<p>$ z = \frac{1}{2}[ (x-\mu_2)^{\top} \Sigma^{-1}(x-\mu_2)- (x-\mu_1)^{\top} \Sigma^{-1}(x-\mu_1)]  + \ln \frac{N_1}{N_2}$</p>
 
-<p>MIC(Maximal information coefficient) 最早源自于2011年发表于science上的论文-Detecting Novel Associations in Large Data Sets.是一种衡量两个随机变量之间独立性的参数方法。</p>
+<p>$~~=\frac{1}{2}[x^{\top}\Sigma^{-1} x - 2\mu_2^{\top}\Sigma^{-1}x + \mu_2^{\top}\Sigma^{-1} \mu_2 - x^{\top}\Sigma^{-1} x + 2\mu_1^{\top}\Sigma^{-1}\mu_1 - \mu_1^{\top}\Sigma^{-1} \mu_1 ] + \ln \frac{N_1}{N_2}$</p>
 
-<p>假设存在随机变量$X,Y$, 我们可以用$Cov(X,Y)$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，$Cov(X,Y)$我发准确的反映变量之间的相关性，我们就必须用其他方法考察他们的独立性。</p>
+<p>$~~ = (\mu_1-\mu_2)^{\top}\Sigma^{-1} x + \frac{1}{2} \mu_2^{\top}\Sigma^{-1} \mu_2 - \frac{1}{2}\mu_1^{\top}\Sigma^{-1} \mu_1 + \ln \frac{N_1}{N_2}$</p>
 
-<h3 id="具体方法">具体方法</h3>
+<p>$w^* = (\mu_1-\mu_2)^{\top}\Sigma^{-1} ~~~~~~b^* = \frac{1}{2} \mu_2^{\top}\Sigma^{-1} \mu_2 - \frac{1}{2}\mu_1^{\top}\Sigma^{-1} \mu_1 + \ln \frac{N_1}{N_2}$</p>
 
-<p>假设我们拿到了随机变量$X,Y$的散点图，我们用小方格子去分割图形，保证在每个小方格子里$I(X;Y)$最大，然后对每个网格中$I(X;Y)$进行归一化处理。选取所有$I(X;Y)$中的最大值作为MIC，注意网格数量应小于$n^{0.6}$。</p>
+<h3 id="4-模型对比">4.模型对比</h3>
 
-<p>$$MIC(X;Y) = \max\frac{I(X;Y)}{\log_2(\min(|X|,|Y|))}$$</p>
+<h4 id="判别模型-1">判别模型</h4>
 
-<p><img src="https://Hanfeng.ink/image/mutual_information/MIC.png" alt="MIC" /></p>
+<ul>
+<li>performance更好</li>
+<li>需要的样本数量更少</li>
+</ul>
 
-<h3 id="实际应用">实际应用</h3>
+<h4 id="生成模型-1">生成模型</h4>
 
-<p>我们可以使用minepy库，来计算随机变量的MIC。先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
-
-<pre><code class="language-python">import numpy as np
-from minepy import MINE
-import matplotlib.pyplot as plt
-
-x = np.linspace(0, 1, 1000)
-y = np.sin(10 * np.pi * x) + x 
-noise = y + np.random.random(1000)
-
-mine = MINE(alpha=0.6)
-mine.compute_score(x, y)      # mine.mic() = 1
-mine.compute_score(x, noise)  # mine.mic() = 0.81
-</code></pre>
-
-<p><img src="https://Hanfeng.ink/image/mutual_information/MIC_figure.png" alt="MIC_figure" /></p>
-
-<p>我们可以看到，对于sin曲线的x和y，MIC为1（相关度极高），即使加入噪音进行干扰，MIC依然有0.81。</p>
-
-<p>接下来我们看看MIC对完全独立的随机数的表现。</p>
-
-<pre><code class="language-python">x = np.random.random(1000)
-y = np.random.random(1000)
-mine = MINE(alpha=0.6)
-mine.compute_score(x, y) # mine.mic() = 0.137
-</code></pre>
+<ul>
+<li>当样本量足够时，收敛速度更快</li>
+<li>训练需要更多的样本</li>
+<li>提供更多的信息</li>
+<li>鲁棒性更好</li>
+</ul>
                         </div>
 
                         
@@ -232,6 +222,10 @@ mine.compute_score(x, y) # mine.mic() = 0.137
 <div class="post-archive">
     <h2>See Also</h2>
     <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/perceptron/">感知机</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
         
         <li><a href="https://Hanfeng.ink/archives/">归档</a></li>
         
@@ -245,7 +239,11 @@ mine.compute_score(x, y) # mine.mic() = 0.137
                                 
                                 <li><a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA">信息论</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92">线性回归</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B">生成模型</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B">判别模型</a></li>
                                 
                             </ul>
                             

@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>信息熵和互信息 | 寒枫的博客</title>
-    <meta property="og:title" content="信息熵和互信息 - 寒枫的博客">
+    <title>感知机 | 寒枫的博客</title>
+    <meta property="og:title" content="感知机 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2018-05-18T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2018-09-12T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2018-05-18T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2018-09-12T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="信息熵和互信息">
+    <meta name="description" content="感知机">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/mutual_information/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/perceptron/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,10 +78,10 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">信息熵和互信息</h1>
+                            <h1 class="post-title">感知机</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2018年5月18日
+                            2018年9月12日
                         </date>
                         
                         <div class="post-meta">
@@ -97,134 +97,91 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>本文主要总结了信息熵在信息论中的具体意义，并介绍了互信系数，最后简单整理了MIC（最大互信系数）的内容和具体用法。</p>
+                            <p>感知机是一种二分类的线性分类模型，感知机的核心思想是在特征空间中找到一个超平面，将所有的实例分隔为正例和反例。</p>
 
-<h2 id="信息熵的定义">信息熵的定义</h2>
+<h3 id="1-分类策略">1.分类策略</h3>
 
-<p>我们考虑一个离散的随机变量x。当我们观察到这个变量的一个具体值的时候，我们 接收到了多少信息呢。<strong>我们对于信息内容的度量将依赖于概率分布p(x)</strong>，因此我们想要寻找一个函数h(x)，它是概率p(x)的单调递减函数，表达了信息的内容。</p>
+<p>假设在特征空间 $R^N$ 中，定义一个超平面：
+$$W\cdot X+b=0$$</p>
 
-<p>$h(·)$形式可以这样寻找:如果我们有两个不相关的事件x和y，那么我们观察到两个事件同时发生时获得的信息应该等于观察到事件各自发生时获得的信息之和，即$h(x, y) = h(x) + h(y)$。因为$p(x, y) = p(x)p(y)$，很容易看出h(x)一定与p(x)的对数有关。同时为了保证$h(x) &gt; 0$，设置：</p>
+<p>对任一点 $X_i，W\cdot X_i+b &gt; 0，y_i = 1$，反之 $y_i=-1$。</p>
 
-<p>$$h(x) = -log(p(x))$$</p>
+<p>进一步，我们改写式子 $X_i = (1, x_1,&hellip;.,x_n),~W=(b, w_1,&hellip;,w_n)$，超平面的数学表达式改为：</p>
 
-<p>现在假设一个发送者想传输一个随机变量的值给接收者。这个过程中，他们传输的平均信息量的期望值这个期望值为：</p>
+<p>$$W\cdot X = 0$$</p>
 
-<p>$$H(x) = \sum p(x)h(x) = -\sum p(x)log(p(x))$$</p>
+<h3 id="2-学习策略">2.学习策略</h3>
 
-<h2 id="从信息学角度看信息熵">从信息学角度看信息熵</h2>
+<p>感知机的学习策略十分简单：</p>
 
-<p>熵的定义在信息学上有实际的应用性质</p>
+<ul>
+<li>初始化一个超平面 $W_0, b_0$</li>
 
-<p>考虑一个随机变量x。这个随机变量有8种等可能的状态，用二进制来标识x的不同状态，为了把x的值传给接收者，我们需要传输一个3bit的消息。</p>
+<li><p>遍历样本中的每个点：</p>
 
-<p>$H(x) = -8 \times \frac{1}{8}log_2(\frac{1}{8}) = 3$</p>
+<ul>
+<li>假如超平面分类正确，不做任何修改</li>
 
-<h3 id="如果这8种状态不是等可能的呢">如果这8种状态不是等可能的呢？</h3>
+<li><p>假如超平面分类错误，修改超平面的方向，使平面的向误分类点的一侧移动，$\eta$ 为学习率或步长
+$$W_{n+1} = W_n + \eta y_iX_i$$</p></li>
 
-<p>如果8种状态不是等可能的，那么用3bit长度的编码来标识不同的状态不是最理想的编码方式。可以调整编码的格式对信息进行压缩，让出现频率高的状态使用长度较短的编码。</p>
+<li><p>如果所有的点都分类正确，结束循环。</p></li>
+</ul></li>
+</ul>
 
-<p>使用霍夫曼编码对信息进行压缩：</p>
+<p><img src="https://Hanfeng.ink/image/perceptron/Perceptron.png" alt="" /></p>
 
-<p><img src="https://Hanfeng.ink/image/mutual_information/CLRS_huffman_coding.png" alt="huffamn coding" /></p>
+<p>假如样本线性可分，根据我们的直观经验，必然存在多个超平面可以完美的将所有的样本正确分隔开。因此，不同的初始化平面，不同的学习率，会导致我们最终得到的不同感知机（感知机不唯一）。</p>
 
-<p><strong>无噪声编码定理：</strong>编码的期望长度不小于随机变量的信息熵。</p>
+<h3 id="3-先决条件和收敛证明">3. 先决条件和收敛证明</h3>
 
-<h2 id="从概率论的角度看信息熵">从概率论的角度看信息熵</h2>
+<p>由1.2可知，感知的训练过程是一个不断循环的过程，我们要最终得到一个感知机，则循环必须终止，而循环终止有两个条件：</p>
 
-<p>考虑一个集合，包含N个完全相同的物体，这些物体要被分到若干个箱子中，使得第i个箱子中有$n_i$个物体。</p>
+<ul>
+<li>样本本身线性可分（存在平面可以正确分隔所有的点）</li>
+<li>平面在经过有限次的迭代后，能够正确的分类</li>
+</ul>
 
-<p>把N个物体分配到箱子中的总方案数量为:</p>
+<p>现在我们假设样本S中所有的点在特征空间中线性可分，存在一个平面 $W_f$ 将所有的点正确分类。因此：</p>
 
-<p>$$W = \frac{N!}{\prod_i n_i!}$$</p>
+<p>$$y_n W_f\cdot X_n\geq\min_{i}y_i W_f\cdot X_i&gt;0$$</p>
 
-<p>$H = \frac{\ln W}{N}= \frac{1}{N}\ln N! - \frac{1}{N}\sum_i \ln n_i!$</p>
+<p>假设我们初始化的 $W_0 = 0$，已知每次迭代：</p>
 
-<p>$N \rightarrow \infty, \ln N! \approx N\ln N - N$</p>
+<p>$W_n = W_{n-1} + \eta y_{n-1}X_{n-1}$</p>
 
-<p>$H = \lim_{N \to \infty} \frac{\ln W}{N} = \ln N - 1 - \sum(\frac{n_i}{N}\ln n_i - \frac{n_i}{N})$</p>
+<p>$W_f\cdot W_n = W_f\cdot (W_{n-1} + \eta y_{n-1}X_{n-1}) \geq  W_f\cdot W_{n-1} + \eta\min_{i} y_iW_f\cdot X_i$</p>
 
-<p>$~~~=-\sum\frac{n_i}{N}\ln \frac{n_i}{N} = -\sum p_i \ln p_i$</p>
+<p>$~~~~~~~~~~~~~\geq n~\eta \min_{i} y_iW_f\cdot X_i$</p>
 
-<h2 id="相对熵和互信息">相对熵和互信息</h2>
+<p>由于只有当分类错误时，感知器才会迭代更新：</p>
 
-<p>考虑某个未知的分布p(x)，假定我们已经使用一个近似的分布q(x)对它进行了建模。由于我们使用了q(x)而不是真实分布p(x)，因此我们需要附加一些信息，而附加信息的量：</p>
+<p>$$y_nW_n\cdot X_n &lt; 0$$</p>
 
-<p>$$KL(p||q) = -\int p(x)\ln q(x)dx + \int p(x)\ln p(x)dx = -\int p(x)\ln \frac{p(x)}{q(x)}dx \geq 0$$</p>
+<p>$||W_{n}||^2 = ||W_{n-1} + \eta y_{n-1}X_{n-1}||^2 = ||W_{n-1}||^2 + 2\eta y_{n-1}W_{n-1}\cdot X_{n-1} + ||\eta y_{n-1}X_{n-1}||^2$</p>
 
-<p>KL散度看做两个分布p(x)和q(x)之间不相似程度的度量，当q(x)和p(x)相同时KL散度为零。</p>
+<p>$~~~~~~~~~~~~~~~\leq ||W_{n-1}||^2 +   ||\eta y_{n-1}X_{n-1}||^2 \leq ||W_{n-1}||^2 + ||\eta X_{longest}||^2$</p>
 
-<p>现在我们另$p = p(X,Y), q = p(X)p(Y)$ 根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$ 我们想知道X,Y的独立性</p>
+<p>$~~~~~~~~~~~~~~~\leq n  ||\eta X_{longest}||^2$</p>
 
-<p>$$I(X;Y) = KL(p(X,Y)||p(X)p(Y)) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+<p>这里我们求迭代后的平面向量 $W_n$ 与 $W_f$ 之间的夹角$\theta$，两个向量的夹角越小，他们之间的相似度越高。</p>
 
-<p>我们可以从编码压缩的角度理解KL散度，当我们知道真实的概率分布之后，我们可以给出最有效的压缩。如果我们使用了不同于真实分布的概率分布，那么我们一定会损失编码效率。</p>
+<p>$\cos\theta = \frac{W_f\cdot W_{n}}{||W_f||||W_{n}||}\geq\frac{n~\eta\min_{i} y_iW_f\cdot X_i}{\sqrt{ n \eta}||W_f|| ||X_{longest}|| } = \sqrt{n} \frac{\sqrt{\eta }\min_{i} y_iW_f\cdot X_i}{||W_f|| ||X_{longest}||} = \sqrt{n} \times
+constant$</p>
 
-<p>接下来，我们先来看一下互信息(Mutual Information)。</p>
+<p>$\cos\theta \sim O(\sqrt{n})$</p>
 
-<p>假设存在随机变量$x,y$, 我们可以用$R^2$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，我们就必须用其他方法考察他们之间的独立性。</p>
+<p>$\cos\theta$ 随着迭代的次数增加，越来越大，意味着经过迭代 $W_n$ 与 $W_f$ 越来越接近，因为 $\cos\theta \leq 1$，因此经过有限次的迭代，就可以得到完美分类的感知机。</p>
 
-<p>根据独立性的性质，我们可知，当X与Y独立时，$p(X,Y) = p(X)p(Y)$，我们定义互信息MI:</p>
+<h3 id="4-样本线性不可分的情况">4.样本线性不可分的情况</h3>
 
-<p>$$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$$</p>
+<p>假如样本在特征空间中线性不可分，那么我们永远无法得到一个完美的感知机，在这种情况下，我们只能退而求其次，使感知机的错误尽可能的少。</p>
 
-<p>下面我们对$I(X;Y)$进行一定的变形：</p>
+<p>$$W_g = argmin \sum_{i=1}^N [y_n \neq sign(W\cdot X_n)]$$</p>
 
-<p>$I(X;Y) = \int_X\int_Y p(X,Y) \log \frac{p(X,Y)}{p(X)p(Y)}$</p>
+<p>但求解这个最优问题是个NP问题，在实际操作中，我们保存一个分类效果最好的感知机，在每次更新感知机后，我们计算感知机的分类误差，如果新的感知机效果更好，就将新得到的感知机保存为最优感知机。</p>
 
-<p>$~~~~~~~~~~~=\int_X\int_Y p(X,Y)\log\frac{p(X,Y)}{p(X)} - \int_X\int_Y p(X,Y)\log p(Y)$</p>
-
-<p>$~~~~~~~~~~~=\int_X\int_Y p(X)p(Y|X)\log p(Y|X) - \int_y p(Y)\log p(Y)$</p>
-
-<p>$~~~~~~~~~~~=\int_X p(X)\int_Yp(Y|X)\log p(Y|X)+H(Y)$</p>
-
-<p>$~~~~~~~~~~~=-\int_X p(X)H(Y|X=x)+H(Y)$</p>
-
-<p>$~~~~~~~~~~~=H(Y)-H(Y|X)$</p>
-
-<p>因此$I(X;Y)$显示了X的引入对于Y的熵的减少量，因而当X和Y独立时，$H(Y)=H(Y|X), I(X;Y)=0$</p>
-
-<h2 id="mic">MIC</h2>
-
-<p>MIC(Maximal information coefficient) 最早源自于2011年发表于science上的论文-Detecting Novel Associations in Large Data Sets.是一种衡量两个随机变量之间独立性的参数方法。</p>
-
-<p>假设存在随机变量$X,Y$, 我们可以用$Cov(X,Y)$来衡量两个变量之间的线性相关程度，但当随机变量之间的函数关系非线性时，$Cov(X,Y)$我发准确的反映变量之间的相关性，我们就必须用其他方法考察他们的独立性。</p>
-
-<h3 id="具体方法">具体方法</h3>
-
-<p>假设我们拿到了随机变量$X,Y$的散点图，我们用小方格子去分割图形，保证在每个小方格子里$I(X;Y)$最大，然后对每个网格中$I(X;Y)$进行归一化处理。选取所有$I(X;Y)$中的最大值作为MIC，注意网格数量应小于$n^{0.6}$。</p>
-
-<p>$$MIC(X;Y) = \max\frac{I(X;Y)}{\log_2(\min(|X|,|Y|))}$$</p>
-
-<p><img src="https://Hanfeng.ink/image/mutual_information/MIC.png" alt="MIC" /></p>
-
-<h3 id="实际应用">实际应用</h3>
-
-<p>我们可以使用minepy库，来计算随机变量的MIC。先做一条sin曲线，计算一下x,y之间的MIC。接着，我们在y上加入噪声信号，重新计算MIC。</p>
-
-<pre><code class="language-python">import numpy as np
-from minepy import MINE
-import matplotlib.pyplot as plt
-
-x = np.linspace(0, 1, 1000)
-y = np.sin(10 * np.pi * x) + x 
-noise = y + np.random.random(1000)
-
-mine = MINE(alpha=0.6)
-mine.compute_score(x, y)      # mine.mic() = 1
-mine.compute_score(x, noise)  # mine.mic() = 0.81
-</code></pre>
-
-<p><img src="https://Hanfeng.ink/image/mutual_information/MIC_figure.png" alt="MIC_figure" /></p>
-
-<p>我们可以看到，对于sin曲线的x和y，MIC为1（相关度极高），即使加入噪音进行干扰，MIC依然有0.81。</p>
-
-<p>接下来我们看看MIC对完全独立的随机数的表现。</p>
-
-<pre><code class="language-python">x = np.random.random(1000)
-y = np.random.random(1000)
-mine = MINE(alpha=0.6)
-mine.compute_score(x, y) # mine.mic() = 0.137
-</code></pre>
+<p>我们限制一定的迭代次数，最终得到一个近似的最优感知机。</p>
                         </div>
 
                         
@@ -232,6 +189,8 @@ mine.compute_score(x, y) # mine.mic() = 0.137
 <div class="post-archive">
     <h2>See Also</h2>
     <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
         
         <li><a href="https://Hanfeng.ink/archives/">归档</a></li>
         
@@ -245,7 +204,9 @@ mine.compute_score(x, y) # mine.mic() = 0.137
                                 
                                 <li><a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA">信息论</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB">分类</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B">判别模型</a></li>
                                 
                             </ul>
                             
