@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>斐波那契数列 | 寒枫的博客</title>
+    <meta property="og:title" content="斐波那契数列 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2019-02-21T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2019-02-21T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="斐波那契数列">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/fibonacci_sequence/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">临渊羡鱼，不如退而结网</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">斐波那契数列</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2019年2月21日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95">数据结构和算法</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>求解斐波那契数列是一道经典的算法问题，本文在总结常规解法的基础上，进一步探讨算法的优化方法。</p>
+
+<h2 id="斐波那契数列的定义">斐波那契数列的定义</h2>
+
+<p>我们定义满足如下表达式的数列为斐波那契数列：</p>
+
+<p>$f(n) = 1 ~~~n=1,2$</p>
+
+<p>$f(n) = f(n-1)+f(n-2) ~~~n&gt;2$</p>
+
+<h2 id="递归方法">递归方法</h2>
+
+<p>我们根据表达式，可以很快用递归的方法写出代码：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include&lt;time.h&gt;
+unsigned long fibonacci(int n);
+
+int main(void) {
+
+    clock_t start, finish;
+    unsigned long result;
+    int n = 30;
+    start=clock();
+    result = fibonacci(n-1);
+    finish = clock();
+    printf(&quot;%lu\n&quot;, result);
+    printf(&quot;%lf s\n&quot;, (double)(finish - start)/CLOCKS_PER_SEC);
+
+    return 0;
+}
+
+unsigned long fibonacci(int n) {
+
+    if (n &lt; 2)
+        return 1;
+        
+    return fibonacci(n-1) + fibonacci(n-2);
+}
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="center">n</th>
+<th align="center">运行时间（秒）</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center">30</td>
+<td align="center">0.002975</td>
+</tr>
+
+<tr>
+<td align="center">40</td>
+<td align="center">0.392288</td>
+</tr>
+
+<tr>
+<td align="center">50</td>
+<td align="center">45.450654</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="性能分析">性能分析</h2>
+
+<p>递归算法虽然很简洁，但在时间复杂度和空间复杂度上存在巨大的缺陷。</p>
+
+<p>我们由斐波那契数列的递推公式可得：</p>
+
+<p>$$T(n) = T(n-1) + T(n-2)~~~~~S(n) = S(n-1)+S(n-2)$$</p>
+
+<p>使用差分方程，我们可以求得：</p>
+
+<p>$$T(n) \sim O(k^n)~~<del>S(n) \sim O(k^n)</del>~~k = \frac{1+\sqrt{5}}{2} \approx 1.62$$</p>
+
+<p>由于 $k &gt; 1$，当 n 增大时，程序所需的时间和空间都会指数级的上升。我们可以看一下系统的栈空间限制：</p>
+
+<pre><code class="language-bash">$ ulimit -s
+8192
+</code></pre>
+
+<p>当 n 足够大时，可能出现<strong>内存溢出</strong>。</p>
+
+<h2 id="动态规划">动态规划</h2>
+
+<p>我们将每次计算的结果保存在一个数组中，这样我们省略大量重复的计算，具体代码如下：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include&lt;time.h&gt;
+#include &lt;stdlib.h&gt;
+unsigned long fibonacci(int n, unsigned long *array);
+
+int main(void) {
+
+    clock_t start, finish;
+    unsigned long result, *array;
+    int n = 1000;
+    start=clock();
+    array = malloc(sizeof(unsigned long) * (n-1));
+    result = fibonacci(n-1, array);
+    finish = clock();
+    printf(&quot;%lu\n&quot;, result);
+    printf(&quot;%lu s\n&quot;, finish - start);
+    free(array);
+    array = NULL;
+
+    return 0;
+}
+
+unsigned long fibonacci(int n, unsigned long *array) {
+
+    if (n &lt; 2)
+        array[n] = 1;
+    else
+        array[n] = fibonacci(n-1, array) + array[n-2];
+
+    return array[n];
+}
+</code></pre>
+
+<p>n = 10000时，仅需要 245μs，此时算法的时间复杂度和空间复杂度均减少到了 $O(n)$。</p>
+
+<h2 id="尾递归">尾递归</h2>
+
+<p>此时时间复杂度已经很好，但考虑到每次递归都会在栈空间上开辟一块空间，用来调用函数，我们可以用尾递归的方式对空间复杂度做进一步的优化。</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include&lt;time.h&gt;
+unsigned long fibonacci(int n, unsigned long f1, unsigned long f2);
+
+int main(void) {
+
+    clock_t start, finish;
+    unsigned long result;
+    int n = 10000;
+    start=clock();
+    result = fibonacci(n, 1, 1);
+    finish = clock();
+    printf(&quot;%lu\n&quot;, result);
+    printf(&quot;%lu μs\n&quot;, finish - start);
+
+    return 0;
+}
+
+unsigned long fibonacci(int n, unsigned long f1, unsigned long f2) {
+
+    if (n == 1)
+        return f2;
+    else
+        return fibonacci(--n, f1+f2, f1);
+}
+</code></pre>
+
+<p>通过尾递归，虽然时间复杂度不变，但空间复杂度降至 $O(1)$。n = 10000时，时间为 234μs。</p>
+
+<h2 id="循环">循环</h2>
+
+<p>我们可以直接用循环计算斐波那契数列，避免大量的函数调用开销，代码为：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include&lt;time.h&gt;
+
+int main(void) {
+
+    clock_t start, finish;
+    start = clock();
+    unsigned long pre = 1, result = 1, media;
+    int i, n = 10000;
+    for (i = 0; i &lt; n-2; i++) {
+        media = pre;
+        pre = result;
+        result += media;
+    }
+    finish = clock();
+    printf(&quot;%lu\n&quot;, result);
+    printf(&quot;%lu μs\n&quot;, finish - start);
+
+    return 0;
+}
+</code></pre>
+
+<p>此时时间复杂度为 $O(n)$，空间复杂度为 $O(1)$，n = 10000时，运行时间直接降至 25μs。</p>
+
+<h2 id="矩阵分解计算">矩阵分解计算</h2>
+
+<p>到了这里，单纯的使用算法很难再进一步优化性能。因此我们使用数学的方法，对斐波那契数列的表达式进行优化。我们将他的递推公式写成矩阵的形式：
+<img src="https://Hanfeng.ink/image/fibonacci_sequence/matrix.png" alt="matrix" />
+接下来，我们的问题就是如何快速的求解变换矩阵的n-1次方，这里我们可以对矩阵进行特征分解。</p>
+
+<h3 id="特征分解">特征分解</h3>
+
+<p>我们首先回顾下特征值和特征向量的定义：</p>
+
+<p>$$Ax = \lambda x$$</p>
+
+<p>A 为 $ n \times n$ 的矩阵，x是一个 n 维向量，$\lambda$ 是一个常数。这个表达式的几何意义是，对向量 x 做空间变换 A，仅仅缩放 x 的模，并不改变 x 在空间中的角度。</p>
+
+<p>我们求出矩阵 A 的 n 个特征值 $\lambda_1,&hellip;,\lambda_n$，以及对应的特征向量 $x_1,&hellip;,x_n$，我们可以将矩阵 A 写成如下形式：</p>
+
+<p>$$A = W\Sigma W^{-1} = [x_1,&hellip;,x_n] diag(\lambda_1,&hellip;,\lambda_n) [x_1,&hellip;,x_n]^{-1} $$</p>
+
+<p>此时我们可以很方便的计算 A 的 n 次方：</p>
+
+<p>$$A^{n} = W\Sigma^n W^{-1} = Wdiag(\lambda_1^n,&hellip;,\lambda_n^n) W^{-1}$$</p>
+
+<p>现在，我们求解变换矩阵的特征值和特征向量：</p>
+
+<p>$\lambda(\lambda-1)-1 = 0  ~~~ \rightarrow ~~\lambda_1=\frac{1+\sqrt{5}}{2} ~~~\lambda_2 = \frac{1-\sqrt{5}}{2}$</p>
+
+<p>$w_1 = [1, \frac{\sqrt{5}-1}{2}]^{\top}~~~~~w_2=[1, -\frac{\sqrt{5}+1}{2}]^{\top}$</p>
+
+<p>将以上式子代入最初的表达式，我们可以求得斐波那契数列的表达式：</p>
+
+<p>$$f(n) = \frac{1}{\sqrt{5}} [(\frac{1+\sqrt{5}}{2})^n - (\frac{1-\sqrt{5}}{2})^n]$$</p>
+
+<p>代码如下</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include&lt;time.h&gt;
+
+int main(void) {
+
+    clock_t start, finish;
+    start = clock();
+    unsigned long result;
+    int n = 10000;
+    
+    if (n &lt;= 2)
+        result = 1;
+    result = (unsigned long)((pow((1+sqrt(5))/2,n)-pow((1-sqrt(5))/2,n))/sqrt(5));
+    
+    finish = clock();
+    printf(&quot;%lu\n&quot;, result);
+    printf(&quot;%lu μs\n&quot;, finish - start);
+
+    return 0;
+}
+</code></pre>
+
+<p>当 n = 10000 时，耗时仅为 11μs。</p>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/about/">关于我</a></li>
+        
+        <li><a href="https://Hanfeng.ink/books/">学习资源推荐</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/generative_model_and_discriminative_model/">生成模型和判别模型</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/perceptron/">感知机</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95">算法</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96">优化</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3">特征值分解</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80">C语言</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/fibonacci_sequence/" title="斐波那契数列">斐波那契数列</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/generative_model_and_discriminative_model/" title="生成模型和判别模型">生成模型和判别模型</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/perceptron/" title="感知机">感知机</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/mutual_information/" title="信息熵和互信息">信息熵和互信息</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/shuihu_chaogai/" title="《水浒传》——晁盖之死">《水浒传》——晁盖之死</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(1)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记(1)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%B0%B4%E6%B5%92%E4%BC%A0/">水浒传</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/">线性回归</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>
