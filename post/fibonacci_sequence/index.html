@@ -164,6 +164,8 @@ unsigned long fibonacci(int n) {
 </tbody>
 </table>
 
+<p>可见随着 n 的增加，程序所需时间急速增加。</p>
+
 <h2 id="性能分析">性能分析</h2>
 
 <p>递归算法虽然很简洁，但在时间复杂度和空间复杂度上存在巨大的缺陷。</p>
@@ -174,7 +176,7 @@ unsigned long fibonacci(int n) {
 
 <p>使用差分方程，我们可以求得：</p>
 
-<p>$$T(n) \sim O(k^n)~~<del>S(n) \sim O(k^n)</del>~~k = \frac{1+\sqrt{5}}{2} \approx 1.62$$</p>
+<p>$$T(n) \sim O(k^n) ~~~~ S(n) \sim O(k^n) ~~~~ k =\frac{1+\sqrt{5}}{2} \approx 1.62$$</p>
 
 <p>由于 $k &gt; 1$，当 n 增大时，程序所需的时间和空间都会指数级的上升。我们可以看一下系统的栈空间限制：</p>
 
