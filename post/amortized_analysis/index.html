@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>动态表扩张和收缩的摊还分析 | 寒枫的博客</title>
+    <meta property="og:title" content="动态表扩张和收缩的摊还分析 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2019-02-23T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2019-02-23T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="动态表扩张和收缩的摊还分析">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/amortized_analysis/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">临渊羡鱼，不如退而结网</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">动态表扩张和收缩的摊还分析</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2019年2月23日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95">数据结构和算法</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>本文主要分析了动态表扩张和收缩过程中的摊还代价。</p>
+
+<h2 id="摊还分析">摊还分析</h2>
+
+<p>当我们对一个数据结构做一系列的操作时，我们不仅希望知道操作的所有时间，也希望知道<strong>每一步操作的平均时间</strong>，摊还分析就是计算每一步操作的平均代价。值得注意的是，摊还分析不同于平均情况分析，<strong>它并不涉及概率，因此可以保证最坏情况下每个操作的平均性能</strong>。</p>
+
+<p>假设我们进行 n 步连续的操作，在最坏的情况下总的花费时间为 $T(n)$，则摊还代价为 $T(n)/n$</p>
+
+<h2 id="动态表">动态表</h2>
+
+<p>在某些应用程序中，我们无法预见会将多少对象保存在表中。我们为一个表分配了固定的内存空间，随后可能出现空间不足的情况。此时，我们必须<strong>重新给表分配更大的内存空间，并将原来表中的数据复制到新的空间中。</strong>同样，当表中存在大量的空间剩余时，我们可以给它重新分配更小的内存空间。</p>
+
+<p>在这里，我们要考虑的一个核心问题是，<strong>重新分配多大的空间才是合理的？</strong>如果分配的空间过小，会导致我们需要频繁的分配空间，以适应表中数据的增加，这必然会导致时间性能的上升；但如果分配的空间过大，会导致内存空间的浪费。因此我们需要一个好的策略，实现<strong>时间复杂度和空间复杂度的平衡。</strong></p>
+
+<h2 id="表的扩张">表的扩张</h2>
+
+<p>我们先考虑只允许向表中插入数据的情况。当我们向一个满的表插入数据时，我们需要扩张表——分配一个包含更多空间的新表。由于我们总是需要表位于连续的内存空间中，因此必须为更大的新表分配一个新的数组，然后将数据从旧表复制到新的表中。</p>
+
+<p>一个常用的分配策略是：<strong>为新表的空间为旧表的2倍</strong>。用C语言写一个简单的动态表。</p>
+
+<h3 id="代码实现">代码实现</h3>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#define Init_size 1
+
+/* define dynamic array */
+typedef int datatype;
+typedef struct array {
+    size_t length, pos;
+    datatype *a;
+}List;
+
+/* append new element in list */
+int append(List *newlist, datatype n) {
+
+    if (newlist-&gt;length == newlist-&gt;pos) {
+        datatype *newspace = calloc(newlist-&gt;length*2, sizeof(datatype));
+        if (newspace == NULL)
+            return 1;
+
+        memcpy(newspace,newlist-&gt;a,sizeof(datatype)*newlist-&gt;length);
+        free(newlist-&gt;a);
+        newlist-&gt;length *= 2;
+        newlist-&gt;a = newspace;
+    }
+
+    newlist-&gt;a[newlist-&gt;pos++] = n;
+
+    return 0;
+}
+
+/* print array information */
+void show(List *newlist) {
+
+    printf(&quot;space: %lu\nelements: &quot;, newlist-&gt;length);
+    for (int i = 0; i &lt; newlist-&gt;pos; i++) {
+        printf(&quot;%d &quot;, newlist-&gt;a[i]);
+    }
+    printf(&quot;\n&quot;);
+}
+
+
+int main(void) {
+
+    int *init = calloc(Init_size, sizeof(datatype));
+    List new = {Init_size, 0, init};
+
+    for (int i = 0; i &lt; 8; i++){
+        if (append(&amp;new, i) == 1){
+            printf(&quot;memory error\n&quot;);
+            break;
+        }
+        show(&amp;new);
+    }
+
+    return 0;
+}
+</code></pre>
+
+<p>程序的运行结果为：</p>
+
+<pre><code class="language-bash">space: 1
+elements: 0 
+space: 2
+elements: 0 1 
+space: 4
+elements: 0 1 2 
+space: 4
+elements: 0 1 2 3 
+space: 8
+elements: 0 1 2 3 4 
+space: 8
+elements: 0 1 2 3 4 5 
+space: 8
+elements: 0 1 2 3 4 5 6 
+space: 8
+elements: 0 1 2 3 4 5 6 7 
+</code></pre>
+
+<h3 id="摊还分析-1">摊还分析</h3>
+
+<p>假设我们对一个空表执行了 n 次插入操作，我们来计算一下操作的代价。由于表每次扩张，其空间都变为原来的两倍，因此表的实际长度必然为 2 的幂。我们两种情况进行讨论：</p>
+
+<ol>
+<li>第 i 次操作时表未装满，我们只需要在表中插入新的元素，因此代价为 $c_i=1$。</li>
+<li>假如 $i-1=2$ 的幂，即第 i 次操作时，表已经装满，需要动态扩张，因此我们需要重新分配空间，并在新的表中插入 i 个元素，代价为 $c_i = i$。</li>
+</ol>
+
+<p>所以 n 次操作的总代价为：</p>
+
+<p>$$\sum_{i=1}^{n} c_i \leq n  + \sum_{j=0}^{lgn}2^j &lt; n+ 2n = 3n$$</p>
+
+<p>因此，单一操作的摊还代价不会大于 3。这样的设计保证了摊还代价为 $O(1)$。</p>
+
+<h2 id="表的收缩">表的收缩</h2>
+
+<p>当我们设计表的收缩策略时，我们希望满足以下条件：</p>
+
+<ul>
+<li>表操作的摊还代价应该有一个常数上界</li>
+<li>表空间的利用率应当有一个常数下界，保证空间的有效利用</li>
+</ul>
+
+<p>对于表的收缩策略，我们直观的认为，当插入数据时应当将表的存储空间加倍，那么删除数据使表空间利用率不足一半时，应当将表的规模减半，这样表的空间利用率大于等于 0.5，但这样的设计存在致命的缺陷。我们考虑以下场景。</p>
+
+<p>当表已经处于充满状态时，我们对他进行反复的插入、删除操作。</p>
+
+<p>第一个插入操作会导致表的扩张，空间会扩张为原来的2倍，此时我们再进行删除操作，表会收缩至原来的1/2，而接下来的操作又会引起表的扩张。以此类推，每个操作的摊还代价为 $O(n)$。</p>
+
+<p>我们对此策略进行改进：</p>
+
+<p><strong>当删除操作导致表的利用率不到1/4时，我们将表的空间收缩为原来的1/2。</strong></p>
+
+<p>这样做使得表的空间利用率不会低于1/4，同时所有操作的摊还成本依然为 $O(1)$。</p>
+
+<h2 id="python代码分析">python代码分析</h2>
+
+<p>python的list使用相似的扩张和收缩策略，我们先对他做简单的研究</p>
+
+<pre><code class="language-python">&gt;&gt;&gt; a = []
+&gt;&gt;&gt; sys.getsizeof(a)
+72
+</code></pre>
+
+<p>我们先创建一个空表 a，可以看到空表占72 bytes，接着我们对空表.append(1)，看一下表 a 所占用空间的变化。</p>
+
+<pre><code class="language-python">&gt;&gt;&gt; b = [1]   # create a new list
+&gt;&gt;&gt; sys.getsizeof(b)  # a list with one element occupy 80 bytes
+80
+&gt;&gt;&gt; a.append(1)
+&gt;&gt;&gt; sys.getsizeof(a)
+104
+</code></pre>
+
+<p>我们先创建一个只有一个元素的list，发现它占据了80个bytes，由此可知，每个element占据8个bytes，接着我们对表a 做<code>.append(1)</code>，发现 a 的空间变为了 104个bytes，和我们之前预想的不同。</p>
+
+<p>那么python具体是如何实现动态表的扩张的呢，这时候我们需要<strong>RTFS</strong>——<a href="https://github.com/python/cpython/blob/3.5/Modules/arraymodule.c">python的源代码</a>：</p>
+
+<pre><code class="language-c">static int
+array_resize(arrayobject *self, Py_ssize_t newsize)
+{
+    char *items;
+    size_t _new_size;
+    ...
+    /* Bypass realloc() when a previous overallocation is large enough
+       to accommodate the newsize.  If the newsize is 16 smaller than the
+       current size, then proceed with the realloc() to shrink the array.
+    */
+
+    if (self-&gt;allocated &gt;= newsize &amp;&amp;
+        Py_SIZE(self) &lt; newsize + 16 &amp;&amp;
+        self-&gt;ob_item != NULL) {
+        Py_SIZE(self) = newsize;
+        return 0;
+    }
+
+    if (newsize == 0) {
+        PyMem_FREE(self-&gt;ob_item);
+        self-&gt;ob_item = NULL;
+        Py_SIZE(self) = 0;
+        self-&gt;allocated = 0;
+        return 0;
+    }
+
+    /* This over-allocates proportional to the array size, making room
+     * for additional growth.  The over-allocation is mild, but is
+     * enough to give linear-time amortized behavior over a long
+     * sequence of appends() in the presence of a poorly-performing
+     * system realloc().
+     * The growth pattern is:  0, 4, 8, 16, 25, 34, 46, 56, 67, 79, ...
+     * Note, the pattern starts out the same as for lists but then
+     * grows at a smaller rate so that larger arrays only overallocate
+     * by about 1/16th -- this is done because arrays are presumed to be more
+     * memory critical.
+     */
+
+    _new_size = (newsize &gt;&gt; 4) + (Py_SIZE(self) &lt; 8 ? 3 : 7) + newsize;
+    items = self-&gt;ob_item;
+    /* XXX The following multiplication and division does not optimize away
+       like it does for lists since the size is not known at compile time */
+    if (_new_size &lt;= ((~(size_t)0) / self-&gt;ob_descr-&gt;itemsize))
+        PyMem_RESIZE(items, char, (_new_size * self-&gt;ob_descr-&gt;itemsize));
+    else
+        items = NULL;
+    if (items == NULL) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    self-&gt;ob_item = items;
+    Py_SIZE(self) = newsize;
+    self-&gt;allocated = _new_size;
+    return 0;
+}
+</code></pre>
+
+<p>从这一段代码中，我们可以看出python的内存分配策略。我们来解释一下这条代码。</p>
+
+<ul>
+<li><code>newsize</code>：操作后，实际需要存储的元素个数</li>
+<li><code>_new_size</code>：操作后，这条 list 实际分配的内存空间</li>
+<li><code>self-&gt;allocated</code>：未操作前，list实际分配的内存空间</li>
+<li><code>Py_size(self)</code>：上一次进行内存分配时，list内存储数据的数量</li>
+</ul>
+
+<p>首先，我们要判断内存空间是否足够，且利用率够高：</p>
+
+<pre><code class="language-c">if (self-&gt;allocated &gt;= newsize &amp;&amp;
+        Py_SIZE(self) &lt; newsize + 16 &amp;&amp;
+        self-&gt;ob_item != NULL) {
+        Py_SIZE(self) = newsize;
+        return 0;
+    }
+</code></pre>
+
+<p>假如之前分配的内存空间已经够用，且存储元素数量和之前相比没有明显的减少，则不改变内存空间</p>
+
+<p>如果不满足以上条件，我们就重新计算所需要的内存空间：</p>
+
+<pre><code class="language-c">_new_size = (newsize &gt;&gt; 4) + (Py_SIZE(self) &lt; 8 ? 3 : 7) + newsize;
+</code></pre>
+
+<p>当我们对一个空列表进行插入操作时，内存会以以下形式扩张</p>
+
+<table>
+<thead>
+<tr>
+<th align="center"><code>self-&gt;allocated</code></th>
+<th align="center"><code>Py_size(self)</code></th>
+<th align="center"><code>newsize</code></th>
+<th align="center"><code>_new_size</code></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">0+3+1=4</td>
+</tr>
+
+<tr>
+<td align="center">4</td>
+<td align="center">1</td>
+<td align="center">2</td>
+<td align="center">不变</td>
+</tr>
+
+<tr>
+<td align="center">4</td>
+<td align="center">2</td>
+<td align="center">3</td>
+<td align="center">不变</td>
+</tr>
+
+<tr>
+<td align="center">4</td>
+<td align="center">3</td>
+<td align="center">4</td>
+<td align="center">不变</td>
+</tr>
+
+<tr>
+<td align="center">4</td>
+<td align="center">4</td>
+<td align="center">5</td>
+<td align="center">0+3+5=8</td>
+</tr>
+</tbody>
+</table>
+
+<p>$~$</p>
+
+<p>内存空间的增长序列为：<strong>0, 4, 8, 16, 25, 34, 46, 56, 67, 79, &hellip;</strong></p>
+
+<p>假如<code>Py_SIZE(self) &gt;= newsize + 16</code>，说明此时实际存储的元素个数相比之前，明显减少，需要收回一部分内存，举例来说：</p>
+
+<table>
+<thead>
+<tr>
+<th align="center"><code>self-&gt;allocated</code></th>
+<th align="center"><code>Py_size(self)</code></th>
+<th align="center"><code>newsize</code></th>
+<th align="center"><code>_new_size</code></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center">20</td>
+<td align="center">20</td>
+<td align="center">4</td>
+<td align="center">0+7+4=11</td>
+</tr>
+</tbody>
+</table>
+
+<p>$~$</p>
+
+<p>新的内存空间小于之前的内存空间，从而收回了一部分内存。</p>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></li>
+        
+        <li><a href="https://Hanfeng.ink/about/">关于我</a></li>
+        
+        <li><a href="https://Hanfeng.ink/books/">学习资源推荐</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/generative_model_and_discriminative_model/">生成模型和判别模型</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/perceptron/">感知机</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">数据结构</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80">C语言</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/amortized_analysis/" title="动态表扩张和收缩的摊还分析">动态表扩张和收缩的摊还分析</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/fibonacci_sequence/" title="斐波那契数列">斐波那契数列</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/generative_model_and_discriminative_model/" title="生成模型和判别模型">生成模型和判别模型</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/perceptron/" title="感知机">感知机</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/mutual_information/" title="信息熵和互信息">信息熵和互信息</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/shuihu_chaogai/" title="《水浒传》——晁盖之死">《水浒传》——晁盖之死</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(2)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记(1)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/python/">python</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%B0%B4%E6%B5%92%E4%BC%A0/">水浒传</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/">线性回归</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>
