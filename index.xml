@@ -47,6 +47,7 @@
  Computer Systems: A Programmer&amp;rsquo;s Perspective，CMU经典计算机系统课程，课程编号为 15-213
  ICS2018，南京大学计算机系统基础 课程实验，使用c语言写一个简单的操作系统，其中用到docker，tmux，git，vim
  CSE341: Programming Languages，华盛顿大学函数式编程课程，可以学习SML，RACKET，Ruby
+ CS61A: Structure and Interpretation of Computer Programs，经典课程SICP的python版本，github上有相关教材的中文版
  The Architecture of Open Source Applications，共有4本书籍，代码全部开源，其中 500 Lines or Less 展示如何用500行代码实现有趣的功能</description>
     </item>
     

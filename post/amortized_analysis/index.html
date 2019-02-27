@@ -115,7 +115,7 @@
 
 <p>我们先考虑只允许向表中插入数据的情况。当我们向一个满的表插入数据时，我们需要扩张表——分配一个包含更多空间的新表。由于我们总是需要表位于连续的内存空间中，因此必须为更大的新表分配一个新的数组，然后将数据从旧表复制到新的表中。</p>
 
-<p>一个常用的分配策略是：<strong>为新表的空间为旧表的2倍</strong>。用C语言写一个简单的动态表。</p>
+<p>一个常用的分配策略是：<strong>新表的空间为旧表的2倍</strong>。用C语言写一个简单的动态表。</p>
 
 <h3 id="代码实现">代码实现</h3>
 
@@ -255,7 +255,7 @@ elements: 0 1 2 3 4 5 6 7
 
 <p>我们先创建一个只有一个元素的list，发现它占据了80个bytes，由此可知，每个element占据8个bytes，接着我们对表a 做<code>.append(1)</code>，发现 a 的空间变为了 104个bytes，和我们之前预想的不同。</p>
 
-<p>那么python具体是如何实现动态表的扩张的呢，这时候我们需要<strong>RTFS</strong>——<a href="https://github.com/python/cpython/blob/3.5/Modules/arraymodule.c">python的源代码</a>：</p>
+<p>那么python具体是如何实现动态表的扩张的呢，这时候我们需要<strong>RTFS</strong>——<a href="https://github.com/python/cpython/blob/master/Modules/arraymodule.c">python的源代码</a>：</p>
 
 <pre><code class="language-c">static int
 array_resize(arrayobject *self, Py_ssize_t newsize)
@@ -429,9 +429,9 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
         
         <li><a href="https://Hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></li>
         
-        <li><a href="https://Hanfeng.ink/about/">关于我</a></li>
-        
         <li><a href="https://Hanfeng.ink/books/">学习资源推荐</a></li>
+        
+        <li><a href="https://Hanfeng.ink/about/">关于我</a></li>
         
         <li><a href="https://Hanfeng.ink/post/generative_model_and_discriminative_model/">生成模型和判别模型</a></li>
         
