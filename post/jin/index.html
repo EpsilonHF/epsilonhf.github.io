@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>感知机 | 寒枫的博客</title>
-    <meta property="og:title" content="感知机 - 寒枫的博客">
+    <title>三家分晋 | 寒枫的博客</title>
+    <meta property="og:title" content="三家分晋 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2019-03-01T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2019-03-01T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="感知机">
+    <meta name="description" content="三家分晋">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/perceptron/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/jin/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,16 +78,16 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">感知机</h1>
+                            <h1 class="post-title">三家分晋</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2018年9月12日
+                            2019年3月1日
                         </date>
                         
                         <div class="post-meta">
                             <span>|</span>
                             
-                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></span>
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0">读书笔记</a></span>
                             
                         </div>
                         
@@ -97,91 +97,57 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>感知机是一种二分类的线性分类模型，感知机的核心思想是在特征空间中找到一个超平面，将所有的实例分隔为正例和反例。</p>
+                            <p>为何三家分晋是春秋和战国的分界线？</p>
 
-<h3 id="1-分类策略">1.分类策略</h3>
+<p>公元前770年，周朝迁都洛阳，周室自此开始失去对于诸侯的掌控力，史称东周。而有趣的是，史学界又将东周划分为两个时期——公元前770年到公元前403年为<strong>春秋</strong>；公元前403年到公元前221年为<strong>战国</strong>。司马光的《资治通鉴》以发生在公元前403年的“三家分晋”，作为春秋和战国的分界线。那么春秋和战国到底有何区别，三家分晋又为何如此重要？</p>
 
-<p>假设在特征空间 $R^N$ 中，定义一个超平面：
-$$W\cdot X+b=0$$</p>
+<h2 id="分封制">分封制</h2>
 
-<p>对任一点 $X_i，W\cdot X_i+b &gt; 0，y_i = 1$，反之 $y_i=-1$。</p>
+<p>要厘清三家分晋对于东周的影响，我们先要从周朝的制度——<strong>分封制</strong>说起。</p>
 
-<p>进一步，我们改写式子 $X_i = (1, x_1,&hellip;.,x_n),~W=(b, w_1,&hellip;,w_n)$，超平面的数学表达式改为：</p>
+<p>不同于之后秦朝采用的郡县制，周朝采用的分封制对于基层缺乏有效的管理能力。简单来说，分封制是一种<strong>层级承包制度</strong>——天子分封诸侯，诸侯管理大夫，一级一级向下延伸，实现权力的向下传递。但分封制有一个致命问题——大夫为诸侯负责，却不为天子负责，士为大夫负责，却不为诸侯负责。也就是说，<strong>中央王朝无法实现对于地方基层的直接管理</strong>。</p>
 
-<p>$$W\cdot X = 0$$</p>
+<p>而西周之所以采用分封制，更多是一种政治和军事上妥协的结果。武王灭纣后，无法将殷人的势力彻底铲除，所以将纣王之子武庚封于原来之殷地，稳定殷人的势力，巩固统治。</p>
 
-<h3 id="2-学习策略">2.学习策略</h3>
+<p>西周分封制的本质，可借柳宗元的《封建论》加以说明:</p>
 
-<p>感知机的学习策略十分简单：</p>
+<blockquote>
+<p>夫殷、周之不革者，<strong>是不得已也</strong>。盖以诸侯归殷者三千焉，资以黜夏，汤不得而废；归周者八百焉，资以胜殷，武王不得而易。徇之以为安，仍之以为俗，汤、武之所不得已也。夫不得已，非公之大者也，私其力于己也，私其卫于子孙也。</p>
+</blockquote>
 
-<ul>
-<li>初始化一个超平面 $W_0, b_0$</li>
+<p>由此可见，<strong>周朝的分封制度，实际上是基层地方社群政治权利的延续。</strong></p>
 
-<li><p>遍历样本中的每个点：</p>
+<h2 id="礼的意义">礼的意义</h2>
 
-<ul>
-<li>假如超平面分类正确，不做任何修改</li>
+<p>由于分封制的天然弊端，导致周朝的统治存在先天的缺陷——一方面，地方诸侯的成长剥夺了周室的活力和资源，削弱了周室的统治力；另一方面，周室需要强有力的地方诸侯来拱卫，保证国家的安全。</p>
 
-<li><p>假如超平面分类错误，修改超平面的方向，使平面的向误分类点的一侧移动，$\eta$ 为学习率或步长
-$$W_{n+1} = W_n + \eta y_iX_i$$</p></li>
+<p>为了保证王室的权威，使地方诸侯贯彻自上而下的行政命令和政治意图，周朝建立了以礼为核心的政治文化。通过礼仪制度，一方面加强了地方诸侯对于周天子的向心力；另一方面强调了等级观念，防止以下犯上，尾大不掉的情况发生。司马光甚至在《资治通鉴》中，明确说道：</p>
 
-<li><p>如果所有的点都分类正确，结束循环。</p></li>
-</ul></li>
-</ul>
+<blockquote>
+<p>臣光曰：<strong>臣闻天子之职莫大于礼，礼莫大于分，分莫大于名。</strong>何谓礼？纪纲是也；何谓分？君臣是也；何谓名？公、侯、卿、大夫是也。</p>
 
-<p><img src="https://Hanfeng.ink/image/perceptron/Perceptron.png" alt="" /></p>
+<p>夫礼，辨贵贱，序亲疏，裁群物，制庶事。非名不著，非器不形。名以命之，器以别之，然后上下粲然有伦，此礼之大经也。</p>
+</blockquote>
 
-<p>假如样本线性可分，根据我们的直观经验，必然存在多个超平面可以完美的将所有的样本正确分隔开。因此，不同的初始化平面，不同的学习率，会导致我们最终得到的不同感知机（感知机不唯一）。</p>
+<h2 id="礼崩乐坏">礼崩乐坏</h2>
 
-<h3 id="3-先决条件和收敛证明">3. 先决条件和收敛证明</h3>
+<p>春秋时期，周室的威望和地位已经严重下滑，诸侯们开始各自为政，不再听从周天子的号令。但此时的周天子，对于周朝的社会秩序依然有着重要的价值，主要体现在以下几个方面：</p>
 
-<p>由1.2可知，感知的训练过程是一个不断循环的过程，我们要最终得到一个感知机，则循环必须终止，而循环终止有两个条件：</p>
+<p>其一、周天子的册封对于诸侯的地位依然有着巨大的影响。霸主需要受到周天子的册封，其地位才会得到广泛的认可。</p>
 
-<ul>
-<li>样本本身线性可分（存在平面可以正确分隔所有的点）</li>
-<li>平面在经过有限次的迭代后，能够正确的分类</li>
-</ul>
+<p>其二、周朝所形成的礼法制度依旧拥有强大的约束力。如子弑父、臣弑君的行为，往往会受到舆论的谴责，甚至其他国家可以以此为由，干涉内政。这种礼法制度作为社会普遍的认可道德，很大程度上维持着社会秩序。</p>
 
-<p>现在我们假设样本S中所有的点在特征空间中线性可分，存在一个平面 $W_f$ 将所有的点正确分类。因此：</p>
+<p>其三、周室的存在对各大诸侯形成制衡。春秋初期诸侯列国共一百四十多个，经过连年兼并，到后来只剩较大的几个。大的诸侯国之间虽然时有战乱，但都共尊周室，一旦对周室不敬，必然被群起而攻之。这种平衡很大程度上保证了周室的安全和名义上的最高地位。</p>
 
-<p>$$y_n W_f\cdot X_n\geq\min_{i}y_i W_f\cdot X_i&gt;0$$</p>
+<p>此时的周室虽然失去了强大的军事能力，却依然享有法理上的最高地位。春秋五霸之首的齐桓公虽能够挟天子已令诸侯，却依然要打着“尊王攘夷”的旗号，不敢有所僭越。而三家分晋的发生，彻底打破了周朝的礼法，致使周天子的最高地位名存实亡。</p>
 
-<p>假设我们初始化的 $W_0 = 0$，已知每次迭代：</p>
+<p>三家分晋，顾名思义，就是韩赵魏三家，瓜分了当时的晋国。在三家分晋之前，晋国就已经被三家卿大夫把持，类似事件在春秋中也是屡见不鲜。但是由于礼法的限制，卿大夫即使势力再强大，也无法得到周天子的册封，取代诸侯的地位。周威烈王却承认了三家的地位，将晋大夫魏斯、赵籍、韩虔册封为诸侯，自己打破了礼法限制。司马光在《资治通鉴》中有极其精彩的评论：</p>
 
-<p>$W_n = W_{n-1} + \eta y_{n-1}X_{n-1}$</p>
+<blockquote>
+<p>今晋大夫暴蔑其君，剖分晋国，天子既不能讨，又宠秩之，使列于诸侯，是区区之名分复不能守而并弃之也。<strong>先王之礼于斯尽矣。</strong>或者以为当是之时，周室微弱，三晋强盛，虽欲勿许，其可得乎？是大不然。夫三晋虽强，苟不顾天下之诛而犯义侵礼，则不请于天子而自立矣。不请于天子而自立，则为悖逆之臣。天下苟有桓、文之君，必奉礼义而征之。今请于天子而天子许之，是受天子之命而为诸侯也，谁得而讨之！<strong>故三晋之列于诸侯，非三晋之坏礼，乃天子自坏之也</strong>。</p>
+</blockquote>
 
-<p>$W_f\cdot W_n = W_f\cdot (W_{n-1} + \eta y_{n-1}X_{n-1}) \geq  W_f\cdot W_{n-1} + \eta\min_{i} y_iW_f\cdot X_i$</p>
-
-<p>$~~~~~~~~~~~~~\geq n~\eta \min_{i} y_iW_f\cdot X_i$</p>
-
-<p>由于只有当分类错误时，感知器才会迭代更新：</p>
-
-<p>$$y_nW_n\cdot X_n &lt; 0$$</p>
-
-<p>$||W_{n}||^2 = ||W_{n-1} + \eta y_{n-1}X_{n-1}||^2 = ||W_{n-1}||^2 + 2\eta y_{n-1}W_{n-1}\cdot X_{n-1} + ||\eta y_{n-1}X_{n-1}||^2$</p>
-
-<p>$~~~~~~~~~~~~~~~\leq ||W_{n-1}||^2 +   ||\eta y_{n-1}X_{n-1}||^2 \leq ||W_{n-1}||^2 + ||\eta X_{longest}||^2$</p>
-
-<p>$~~~~~~~~~~~~~~~\leq n  ||\eta X_{longest}||^2$</p>
-
-<p>这里我们求迭代后的平面向量 $W_n$ 与 $W_f$ 之间的夹角$\theta$，两个向量的夹角越小，他们之间的相似度越高。</p>
-
-<p>$\cos\theta = \frac{W_f\cdot W_{n}}{||W_f||||W_{n}||}\geq\frac{n~\eta\min_{i} y_iW_f\cdot X_i}{\sqrt{ n \eta}||W_f|| ||X_{longest}|| } = \sqrt{n} \frac{\sqrt{\eta }\min_{i} y_iW_f\cdot X_i}{||W_f|| ||X_{longest}||} = \sqrt{n} \times
-constant$</p>
-
-<p>$\cos\theta \sim O(\sqrt{n})$</p>
-
-<p>$\cos\theta$ 随着迭代的次数增加，越来越大，意味着经过迭代 $W_n$ 与 $W_f$ 越来越接近，因为 $\cos\theta \leq 1$，因此经过有限次的迭代，就可以得到完美分类的感知机。</p>
-
-<h3 id="4-样本线性不可分的情况">4.样本线性不可分的情况</h3>
-
-<p>假如样本在特征空间中线性不可分，那么我们永远无法得到一个完美的感知机，在这种情况下，我们只能退而求其次，使感知机的错误尽可能的少。</p>
-
-<p>$$W_g = argmin \sum_{i=1}^N [y_n \neq sign(W\cdot X_n)]$$</p>
-
-<p>但求解这个最优问题是个NP问题，在实际操作中，我们保存一个分类效果最好的感知机，在每次更新感知机后，我们计算感知机的分类误差，如果新的感知机效果更好，就将新得到的感知机保存为最优感知机。</p>
-
-<p>我们限制一定的迭代次数，最终得到一个近似的最优感知机。</p>
+<p>周天子作为礼法制度的维护者、仲裁者和受益者，其册封三晋的行为直接导致了周朝社会制度的崩溃。自此之后，<strong>弱肉强食</strong>的丛林法则登上舞台，成为时代的主旋律。</p>
                         </div>
 
                         
@@ -190,11 +156,15 @@ constant$</p>
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
-        
         <li><a href="https://Hanfeng.ink/post/shuihu_chaogai/">《水浒传》——晁盖之死</a></li>
         
-        <li><a href="https://Hanfeng.ink/archives/">归档</a></li>
+        <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
+        
+        <li><a href="https://Hanfeng.ink/books/">学习资源推荐</a></li>
+        
+        <li><a href="https://Hanfeng.ink/about/">关于我</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></li>
         
     </ul>
 </div>
@@ -204,11 +174,9 @@ constant$</p>
                             
                             <ul class="clearfix">
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0">读书笔记</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB">分类</a></li>
-                                
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B">判别模型</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2">历史</a></li>
                                 
                             </ul>
                             

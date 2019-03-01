@@ -323,7 +323,7 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
 <li><code>Py_size(self)</code>：上一次进行内存分配时，list内存储数据的数量</li>
 </ul>
 
-<p>首先，我们要判断内存空间是否足够，且利用率够高：</p>
+<p>首先，python会判断内存空间是否足够，且利用率够高：</p>
 
 <pre><code class="language-c">if (self-&gt;allocated &gt;= newsize &amp;&amp;
         Py_SIZE(self) &lt; newsize + 16 &amp;&amp;
@@ -333,9 +333,9 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
     }
 </code></pre>
 
-<p>假如之前分配的内存空间已经够用，且存储元素数量和之前相比没有明显的减少，则不改变内存空间</p>
+<p>假如之前分配的内存空间已经够用，且存储元素数量和之前相比没有明显的减少，则不改变内存空间。</p>
 
-<p>如果不满足以上条件，我们就重新计算所需要的内存空间：</p>
+<p>如果不满足以上条件，python就重新计算所需要的内存空间：</p>
 
 <pre><code class="language-c">_new_size = (newsize &gt;&gt; 4) + (Py_SIZE(self) &lt; 8 ? 3 : 7) + newsize;
 </code></pre>
@@ -477,6 +477,10 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
 <ul class="widget-list">
     
     <li>
+        <a href="https://Hanfeng.ink/post/jin/" title="三家分晋">三家分晋</a>
+    </li>
+    
+    <li>
         <a href="https://Hanfeng.ink/post/amortized_analysis/" title="动态表扩张和收缩的摊还分析">动态表扩张和收缩的摊还分析</a>
     </li>
     
@@ -518,7 +522,7 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
     </li>
     
     <li>
-        <a href="https://Hanfeng.ink/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记(1)</a>
+        <a href="https://Hanfeng.ink/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记(2)</a>
     </li>
     
 </ul>
@@ -539,6 +543,8 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
     <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
     
     <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2/">历史</a>
     
     <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
     
