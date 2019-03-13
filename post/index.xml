@@ -7,13 +7,31 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Wed, 06 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 11 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>进程</title>
+      <title>《报任安书》——</title>
+      <link>https://Hanfeng.ink/post/baorenanshu/</link>
+      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/baorenanshu/</guid>
+      <description>&lt;p&gt;夜读《报任安书》，难以自己，遂有此文，谨以记之。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Python如何调用C程序</title>
+      <link>https://Hanfeng.ink/post/python_to_c/</link>
+      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/python_to_c/</guid>
+      <description>&lt;p&gt;本文简单说明了如何使用python的&lt;code&gt;ctpyes&lt;/code&gt;库，调用C程序。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>进程简介</title>
       <link>https://Hanfeng.ink/post/porcess/</link>
       <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
