@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>感知机 | 寒枫的博客</title>
-    <meta property="og:title" content="感知机 - 寒枫的博客">
+    <title>将C程序封装成python库 | 寒枫的博客</title>
+    <meta property="og:title" content="将C程序封装成python库 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2019-03-16T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2019-03-16T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="感知机">
+    <meta name="description" content="将C程序封装成python库">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/perceptron/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/c_to_python/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,16 +78,16 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">感知机</h1>
+                            <h1 class="post-title">将C程序封装成python库</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2018年9月12日
+                            2019年3月16日
                         </date>
                         
                         <div class="post-meta">
                             <span>|</span>
                             
-                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></span>
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/python">Python</a></span>
                             
                         </div>
                         
@@ -97,91 +97,152 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>感知机是一种二分类的线性分类模型，感知机的核心思想是在特征空间中找到一个超平面，将所有的实例分隔为正例和反例。</p>
+                            <p>本文简单说明了将C函数封装成python库的过程。</p>
 
-<h3 id="1-分类策略">1.分类策略</h3>
+<p>之前写了如何用<code>ctypes</code>模块调用C的共享库，这次我们尝试直接将C程序打包成python的库文件。更加具体的内容可以查询 <a href="https://docs.python.org/3.7/extending/extending.html">python官方文档</a>。</p>
 
-<p>假设在特征空间 $R^N$ 中，定义一个超平面：
-$$W\cdot X+b=0$$</p>
+<h2 id="前期准备">前期准备</h2>
 
-<p>对任一点 $X_i，W\cdot X_i+b &gt; 0，y_i = 1$，反之 $y_i=-1$。</p>
+<p>为了将C函数封装成python库，我们必须在系统中安装python开发包——<code>python-dev</code>，具体方法可以根据系统的不同，自行去网上搜索，我们在这里不再赘述。</p>
 
-<p>进一步，我们改写式子 $X_i = (1, x_1,&hellip;.,x_n),~W=(b, w_1,&hellip;,w_n)$，超平面的数学表达式改为：</p>
+<p>如果使用系统原生的python2或者直接安装的python3，可直接滤过一下内容。但如果系统安装的是<code>Anaconda</code>，那们在编译C语言时可能会出现以下情况：</p>
 
-<p>$$W\cdot X = 0$$</p>
+<pre><code class="language-bash">fatal error: Python.h: No such file or directory
+</code></pre>
 
-<h3 id="2-学习策略">2.学习策略</h3>
+<p>导致问题的原因在于，Python.h文件在Anaconda文件目录下，不在GCC的默认加载库文件的路径里，所以编译时会导致GCC无法找到头文件。</p>
 
-<p>感知机的学习策略十分简单：</p>
+<p>我们先找到系统中python.h的位置:</p>
+
+<pre><code class="language-bash">sudo find / -name Python.h 2&gt;/dev/null
+</code></pre>
+
+<p>然后将文件的路径加载入GCC的路径中:</p>
+
+<pre><code class="language-bash">export C_INCLUDE_PATH=对应路径
+</code></pre>
+
+<h2 id="c程序">C程序</h2>
+
+<p>接下来我们就需要对原有的c程序进行修饰，完成对于输入和输出数据的格式转换。以下是一个简单的计算斐波那契数列的小程序。头文件代码如下：</p>
+
+<pre><code class="language-c">/* fib.h */
+#ifndef FIB_H_
+#define FIB_H_
+
+static int fib(int num);
+
+#endif
+</code></pre>
+
+<p>主程序代码如下：</p>
+
+<pre><code class="language-c">/* fib.c */
+#include &lt;stdio.h&gt;
+#include &lt;Python.h&gt;
+#include &quot;fib.h&quot;
+
+/* The function to calculate fibonacci sequence */
+static int
+fib(int num)
+{
+    int pre = 0, ppre = 1;
+    int media;
+    for (int i = 0; i &lt; num; i++) {
+        media = pre;
+        pre = ppre + pre;
+        ppre = media;
+    }
+
+    return pre;
+}
+
+/* Wrap the original function to python object */
+static PyObject *
+py_fib(PyObject *self, PyObject *args)
+{
+    int num;
+    int result;
+
+    // transform python object to c int
+    if (!PyArg_ParseTuple(args, &quot;i&quot;, &amp;num))
+        return NULL;
+    result = fib(num);
+    // transform c int to python object
+    return Py_BuildValue(&quot;i&quot;, result);
+}
+
+/* Define the methods in module */
+static PyMethodDef fibmethods[] = {
+    {&quot;fib&quot;, py_fib, METH_VARARGS},
+    {NULL, NULL, 0, NULL}
+};
+
+/* Define the module */
+static struct PyModuleDef fibmodule = {
+    PyModuleDef_HEAD_INIT,
+    &quot;Fib&quot;,   /* name of module */
+    NULL,    /* module documentation, may be NULL */
+    -1,      /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+    fibmethods
+};
+
+/* initialization function */
+PyMODINIT_FUNC
+PyInit_Fib(void)
+{
+    return PyModule_Create(&amp;fibmodule);
+}
+</code></pre>
+
+<p>主程序代码主要分为3部分：</p>
 
 <ul>
-<li>初始化一个超平面 $W_0, b_0$</li>
-
-<li><p>遍历样本中的每个点：</p>
-
-<ul>
-<li>假如超平面分类正确，不做任何修改</li>
-
-<li><p>假如超平面分类错误，修改超平面的方向，使平面的向误分类点的一侧移动，$\eta$ 为学习率或步长
-$$W_{n+1} = W_n + \eta y_iX_i$$</p></li>
-
-<li><p>如果所有的点都分类正确，结束循环。</p></li>
-</ul></li>
+<li><code>fib</code>函数：计算斐波那契数列的c函数</li>
+<li><code>py_fib</code>函数：对<code>fib</code>函数进行封装，将输入输出值的类型由c的原生类型转换为python类型，函数具体意义可以查询 <a href="https://docs.python.org/3.7/c-api/arg.html#c.PyArg_ParseTuple">python C API manual</a></li>
+<li><code>fibmethods</code>,<code>fibmodule</code>,<code>PyInit_Fib</code>：对模块的方法，名字，内容进行定义，并初始化</li>
 </ul>
 
-<p><img src="https://Hanfeng.ink/image/perceptron/Perceptron.png" alt="" /></p>
+<h2 id="python库安装">python库安装</h2>
 
-<p>假如样本线性可分，根据我们的直观经验，必然存在多个超平面可以完美的将所有的样本正确分隔开。因此，不同的初始化平面，不同的学习率，会导致我们最终得到的不同感知机（感知机不唯一）。</p>
+<p>接着我们写python库的安装程序：</p>
 
-<h3 id="3-先决条件和收敛证明">3. 先决条件和收敛证明</h3>
+<pre><code class="language-python">from setuptools import setup
+from distutils.core import Extension
 
-<p>由1.2可知，感知的训练过程是一个不断循环的过程，我们要最终得到一个感知机，则循环必须终止，而循环终止有两个条件：</p>
+version = '0.10'
+MOD = 'Fib'
+source = 'fib.c'
 
-<ul>
-<li>样本本身线性可分（存在平面可以正确分隔所有的点）</li>
-<li>平面在经过有限次的迭代后，能够正确的分类</li>
-</ul>
+setup(name = MOD,
+      version = version,
+      description = &quot;a fib sequence calculate package&quot;,
+      classifiers=[
+        &quot;Programming Language :: Python&quot;,
+        ],
+      author = 'Hanfeng Zhang',
+      ext_modules = [Extension(MOD, sources = ['fib.c',])],
+      install_requires=[
+          'setuptools',
+      ]
+)
+</code></pre>
 
-<p>现在我们假设样本S中所有的点在特征空间中线性可分，存在一个平面 $W_f$ 将所有的点正确分类。因此：</p>
+<p>用下列命令行安装python库：</p>
 
-<p>$$y_n W_f\cdot X_n\geq\min_{i}y_i W_f\cdot X_i&gt;0$$</p>
+<pre><code>python setup.py build
+python setup.py install
+</code></pre>
 
-<p>假设我们初始化的 $W_0 = 0$，已知每次迭代：</p>
+<p>安装完毕后，进入python，检查新的库能否正常使用：</p>
 
-<p>$W_n = W_{n-1} + \eta y_{n-1}X_{n-1}$</p>
+<pre><code class="language-python">&gt;&gt;&gt; import Fib
+&gt;&gt;&gt; Fib.fib(10)
+55
+</code></pre>
 
-<p>$W_f\cdot W_n = W_f\cdot (W_{n-1} + \eta y_{n-1}X_{n-1}) \geq  W_f\cdot W_{n-1} + \eta\min_{i} y_iW_f\cdot X_i$</p>
-
-<p>$~~~~~~~~~~~~~\geq n~\eta \min_{i} y_iW_f\cdot X_i$</p>
-
-<p>由于只有当分类错误时，感知器才会迭代更新：</p>
-
-<p>$$y_nW_n\cdot X_n &lt; 0$$</p>
-
-<p>$||W_{n}||^2 = ||W_{n-1} + \eta y_{n-1}X_{n-1}||^2 = ||W_{n-1}||^2 + 2\eta y_{n-1}W_{n-1}\cdot X_{n-1} + ||\eta y_{n-1}X_{n-1}||^2$</p>
-
-<p>$~~~~~~~~~~~~~~~\leq ||W_{n-1}||^2 +   ||\eta y_{n-1}X_{n-1}||^2 \leq ||W_{n-1}||^2 + ||\eta X_{longest}||^2$</p>
-
-<p>$~~~~~~~~~~~~~~~\leq n  ||\eta X_{longest}||^2$</p>
-
-<p>这里我们求迭代后的平面向量 $W_n$ 与 $W_f$ 之间的夹角$\theta$，两个向量的夹角越小，他们之间的相似度越高。</p>
-
-<p>$\cos\theta = \frac{W_f\cdot W_{n}}{||W_f||||W_{n}||}\geq\frac{n~\eta\min_{i} y_iW_f\cdot X_i}{\sqrt{ n \eta}||W_f|| ||X_{longest}|| } = \sqrt{n} \frac{\sqrt{\eta }\min_{i} y_iW_f\cdot X_i}{||W_f|| ||X_{longest}||} = \sqrt{n} \times
-constant$</p>
-
-<p>$\cos\theta \sim O(\sqrt{n})$</p>
-
-<p>$\cos\theta$ 随着迭代的次数增加，越来越大，意味着经过迭代 $W_n$ 与 $W_f$ 越来越接近，因为 $\cos\theta \leq 1$，因此经过有限次的迭代，就可以得到完美分类的感知机。</p>
-
-<h3 id="4-样本线性不可分的情况">4.样本线性不可分的情况</h3>
-
-<p>假如样本在特征空间中线性不可分，那么我们永远无法得到一个完美的感知机，在这种情况下，我们只能退而求其次，使感知机的错误尽可能的少。</p>
-
-<p>$$W_g = argmin \sum_{i=1}^N [y_n \neq sign(W\cdot X_n)]$$</p>
-
-<p>但求解这个最优问题是个NP问题，在实际操作中，我们保存一个分类效果最好的感知机，在每次更新感知机后，我们计算感知机的分类误差，如果新的感知机效果更好，就将新得到的感知机保存为最优感知机。</p>
-
-<p>我们限制一定的迭代次数，最终得到一个近似的最优感知机。</p>
+<p>库安装成功！</p>
                         </div>
 
                         
@@ -190,11 +251,15 @@ constant$</p>
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
+        <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/shuihu_chaogai/">《水浒传》——晁盖之死</a></li>
+        <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
         
-        <li><a href="https://Hanfeng.ink/archives/">归档</a></li>
+        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/jin/">三家分晋</a></li>
         
     </ul>
 </div>
@@ -204,11 +269,9 @@ constant$</p>
                             
                             <ul class="clearfix">
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB">分类</a></li>
-                                
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B">判别模型</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80">C语言</a></li>
                                 
                             </ul>
                             

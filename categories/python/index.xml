@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Sun, 10 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 16 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/categories/python/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>将C程序封装成python库</title>
+      <link>https://Hanfeng.ink/post/c_to_python/</link>
+      <pubDate>Sat, 16 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/c_to_python/</guid>
+      <description>&lt;p&gt;本文简单说明了将C函数封装成python库的过程。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Python如何调用C程序</title>
