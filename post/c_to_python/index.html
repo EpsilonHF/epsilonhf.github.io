@@ -99,13 +99,13 @@
                         <div class="post-content">
                             <p>本文简单说明了将C函数封装成python库的过程。</p>
 
-<p>之前写了如何用<code>ctypes</code>模块调用C的共享库，这次我们尝试直接将C程序打包成python的库文件。更加具体的内容可以查询 <a href="https://docs.python.org/3.7/extending/extending.html">python官方文档</a>。</p>
+<p>之前写了如何用<code>ctypes</code>模块调用C的共享库，这次我们尝试直接将C程序打包成python的库文件。具体的细节可以查询 <a href="https://docs.python.org/3.7/extending/extending.html">python官方文档</a>。</p>
 
 <h2 id="前期准备">前期准备</h2>
 
 <p>为了将C函数封装成python库，我们必须在系统中安装python开发包——<code>python-dev</code>，具体方法可以根据系统的不同，自行去网上搜索，我们在这里不再赘述。</p>
 
-<p>如果使用系统原生的python2或者直接安装的python3，可直接滤过一下内容。但如果系统安装的是<code>Anaconda</code>，那们在编译C语言时可能会出现以下情况：</p>
+<p>如果使用系统原生的python2或者直接安装的python3，可直接略过以下内容。但如果系统安装的是<code>Anaconda</code>，那们在编译C语言时可能会出现以下情况：</p>
 
 <pre><code class="language-bash">fatal error: Python.h: No such file or directory
 </code></pre>
