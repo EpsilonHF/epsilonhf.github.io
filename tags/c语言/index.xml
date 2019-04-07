@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Sat, 16 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>线程简介</title>
+      <link>https://Hanfeng.ink/post/thread/</link>
+      <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/thread/</guid>
+      <description>&lt;p&gt;本文简单说明了linux操作系统中线程的概念，以及简单的操作。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>将C程序封装成python库</title>
@@ -51,7 +60,7 @@
     <item>
       <title>斐波那契数列</title>
       <link>https://Hanfeng.ink/post/fibonacci_sequence/</link>
-      <pubDate>Mon, 21 Jan 2019 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 17 Jan 2019 00:00:00 +0000</pubDate>
       
       <guid>https://Hanfeng.ink/post/fibonacci_sequence/</guid>
       <description>&lt;p&gt;求解斐波那契数列是一道经典的算法问题，本文在总结常规解法的基础上，进一步探讨算法的优化方法。&lt;/p&gt;</description>

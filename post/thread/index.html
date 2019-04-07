@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>将C程序封装成python库 | 寒枫的博客</title>
-    <meta property="og:title" content="将C程序封装成python库 - 寒枫的博客">
+    <title>线程简介 | 寒枫的博客</title>
+    <meta property="og:title" content="线程简介 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2019-03-16T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2019-04-06T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2019-03-16T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2019-04-06T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="将C程序封装成python库">
+    <meta name="description" content="线程简介">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/c_to_python/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/thread/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,16 +78,16 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">将C程序封装成python库</h1>
+                            <h1 class="post-title">线程简介</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2019年3月16日
+                            2019年4月6日
                         </date>
                         
                         <div class="post-meta">
                             <span>|</span>
                             
-                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/python">Python</a></span>
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F">Linux操作系统</a></span>
                             
                         </div>
                         
@@ -97,152 +97,201 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>本文简单说明了将C函数封装成python库的过程。</p>
+                            <p>本文简单说明了linux操作系统中线程的概念，以及简单的操作。</p>
 
-<p>之前写了如何用<code>ctypes</code>模块调用C的共享库，这次我们尝试直接将C程序打包成python的库文件。具体的细节可以查询 <a href="https://docs.python.org/3.7/extending/extending.html">python官方文档</a>。</p>
+<h2 id="线程的概念">线程的概念</h2>
 
-<h2 id="前期准备">前期准备</h2>
+<p>进程在各自独立的地址空间中运行，进程之间共享数据需要用mmap或者进程间通信机制。有些情况需要在一个进程中同时执行多个控制流程，这时候线程就派上了用场。</p>
 
-<p>为了将C函数封装成python库，我们必须在系统中安装python开发包——<code>python-dev</code>，具体方法可以根据系统的不同，自行去网上搜索，我们在这里不再赘述。</p>
-
-<p>如果使用系统原生的python2或者直接安装的python3，可直接略过以下内容。但如果系统安装的是<code>Anaconda</code>，那们在编译C语言时可能会出现以下情况：</p>
-
-<pre><code class="language-bash">fatal error: Python.h: No such file or directory
-</code></pre>
-
-<p>导致问题的原因在于，Python.h文件在Anaconda文件目录下，不在GCC的默认加载库文件的路径里，所以编译时会导致GCC无法找到头文件。</p>
-
-<p>我们先找到系统中python.h的位置:</p>
-
-<pre><code class="language-bash">sudo find / -name Python.h 2&gt;/dev/null
-</code></pre>
-
-<p>然后将文件的路径加载入GCC的路径中:</p>
-
-<pre><code class="language-bash">export C_INCLUDE_PATH=对应路径
-</code></pre>
-
-<h2 id="c程序">C程序</h2>
-
-<p>接下来我们就需要对原有的c程序进行修饰，完成对于输入和输出数据的格式转换。以下是一个简单的计算斐波那契数列的小程序。头文件代码如下：</p>
-
-<pre><code class="language-c">/* fib.h */
-#ifndef FIB_H_
-#define FIB_H_
-
-static int fib(int num);
-
-#endif
-</code></pre>
-
-<p>主程序代码如下：</p>
-
-<pre><code class="language-c">/* fib.c */
-#include &lt;stdio.h&gt;
-#include &lt;Python.h&gt;
-#include &quot;fib.h&quot;
-
-/* The function to calculate fibonacci sequence */
-static int
-fib(int num)
-{
-    int pre = 0, ppre = 1;
-    int media;
-    for (int i = 0; i &lt; num; i++) {
-        media = pre;
-        pre = ppre + pre;
-        ppre = media;
-    }
-
-    return pre;
-}
-
-/* Wrap the original function to python object */
-static PyObject *
-py_fib(PyObject *self, PyObject *args)
-{
-    int num;
-    int result;
-
-    // transform python object to c int
-    if (!PyArg_ParseTuple(args, &quot;i&quot;, &amp;num))
-        return NULL;
-    result = fib(num);
-    // transform c int to python object
-    return Py_BuildValue(&quot;i&quot;, result);
-}
-
-/* Define the methods in module */
-static PyMethodDef fibmethods[] = {
-    {&quot;fib&quot;, py_fib, METH_VARARGS},
-    {NULL, NULL, 0, NULL}
-};
-
-/* Define the module */
-static struct PyModuleDef fibmodule = {
-    PyModuleDef_HEAD_INIT,
-    &quot;Fib&quot;,   /* name of module */
-    NULL,    /* module documentation, may be NULL */
-    -1,      /* size of per-interpreter state of the module,
-                or -1 if the module keeps state in global variables. */
-    fibmethods
-};
-
-/* initialization function */
-PyMODINIT_FUNC
-PyInit_Fib(void)
-{
-    return PyModule_Create(&amp;fibmodule);
-}
-</code></pre>
-
-<p>主程序代码主要分为3部分：</p>
+<p>每个线程都会执行相同的程序代码，共享同一数据区域和堆。同时，每个线程都有自己的栈，用来存储本地变量和函数调用链接信息。线程之间可以通过共享的全局变量进行通讯，除此之外，各线程还共享以下进程资源和环境：</p>
 
 <ul>
-<li><code>fib</code>函数：计算斐波那契数列的c函数</li>
-<li><code>py_fib</code>函数：对<code>fib</code>函数进行封装，将输入输出值的类型由c的原生类型转换为python类型，函数具体意义可以查询 <a href="https://docs.python.org/3.7/c-api/arg.html#c.PyArg_ParseTuple">python C API manual</a></li>
-<li><code>fibmethods</code>,<code>fibmodule</code>,<code>PyInit_Fib</code>：对模块的方法，名字，内容进行定义，并初始化</li>
+<li>文件描述符表</li>
+<li>每种信号的处理方式（SIG_IGN、SIG_DFL或者自定义的信号处理函数）</li>
+<li>当前工作目录</li>
+<li>用户id和组id</li>
 </ul>
 
-<h2 id="python库安装">python库安装</h2>
+<p>但有些资源是每个线程各有一份的：</p>
 
-<p>接着我们写python库的安装程序：</p>
+<ul>
+<li>线程id</li>
+<li>上下文，包括各种寄存器的值、程序计数器和栈指针</li>
+<li>栈空间</li>
+<li>errno变量</li>
+<li>信号屏蔽字</li>
+<li>调度优先级</li>
+</ul>
 
-<pre><code class="language-python">from setuptools import setup
-from distutils.core import Extension
+<h2 id="线程控制">线程控制</h2>
 
-version = '0.10'
-MOD = 'Fib'
-source = 'fib.c'
+<h3 id="线程的创建">线程的创建</h3>
 
-setup(name = MOD,
-      version = version,
-      description = &quot;a fib sequence calculate package&quot;,
-      classifiers=[
-        &quot;Programming Language :: Python&quot;,
-        ],
-      author = 'Hanfeng Zhang',
-      ext_modules = [Extension(MOD, sources = ['fib.c',])],
-      install_requires=[
-          'setuptools',
-      ]
-)
+<p>程序开始启动时，它是以单进程中的单个控制线程启动的。在创建多个线程之前，程序的行为与传统的进程并没有什么区别。新增的线程可以调用<code>pthread_create</code>函数创建。</p>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+int pthread_create(pthread_t thread, const pthread_attr_t *attr,
+	               void *(*start_routine) (void *), void *arg);
 </code></pre>
 
-<p>用下列命令行安装python库：</p>
+<p>当<code>pthread_create</code>成功返回时，新创建线程的线程 ID 会被存入<code>thread</code>指向的内存单元。<code>attr</code>用于定制不同的线程属性，这里我们设为<code>NULL</code>，创建一个具有默认属性的线程。新创建的线程会从<code>start_toutine</code>函数的地址开始运行，将函数的参数存入<code>arg</code>指针指向的地址，如果参数数量大于1，那么需要把参数放入结构体中，然后传入结构体的指针。</p>
 
-<pre><code>python setup.py build
-python setup.py install
+<p>我们写一个打印线程ID的简单小程序：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;unistd.h&gt;
+
+pthread_t ntid;
+
+/* print thread information */
+void printids(const char *s)
+{
+	pid_t pid;
+	pthread_t tid;
+	pid = getpid();
+	tid = pthread_self();
+	printf(&quot;%s pid %u tid %u (0x%x)\n&quot;, s, (unsigned int)pid, (unsigned int)tid, (unsigned int)tid);
+}
+
+/* thread function */
+void *thr_fn(void *arg)
+{
+	printids(arg);
+	return NULL;
+}
+
+int main(void)
+{
+	int err;
+    // create a new thread
+	err = pthread_create(&amp;ntid, NULL, thr_fn, &quot;new thread: &quot;);
+	if (err) {
+		fprintf(stderr, &quot;can't create thread: %s\n&quot;, strerror(err));
+		exit(1);
+	}
+	printids(&quot;main thread:&quot;);
+	sleep(1);
+
+    return 0;
+}
 </code></pre>
 
-<p>安装完毕后，进入python，检查新的库能否正常使用：</p>
+<p>编译运行结果如下：</p>
 
-<pre><code class="language-python">&gt;&gt;&gt; import Fib
-&gt;&gt;&gt; Fib.fib(10)
-55
+<pre><code class="language-bash">$ gcc 35-1.c -lpthread -o thread-1
+$ ./thread-1
+main thread: pid 45 tid 1461106432 (0x5716b700)
+new thread:  pid 45 tid 1452906240 (0x56999700)
 </code></pre>
 
-<p>库安装成功！</p>
+<p>从上面的输出结果可以看到，每个线程都有一个线程ID，进程ID在整个系统中是唯一的，但线程ID不同，线程ID只有在它所属进程上下文中才有意义。</p>
+
+<h3 id="线程终止">线程终止</h3>
+
+<p>如果进程中的任意线程调用了<code>exit</code>、<code>_exit</code>、<code>_Exit</code>，那么整个进程就会终止。在不终止整个进程控制的情况下，单个线程可以通过3种方式退出：</p>
+
+<ul>
+<li>线程简单的从启动例程中返回</li>
+<li>线程可以调用<code>pthread_cancel</code>，终止同一进程中的另一个线程</li>
+<li>线程调用<code>pthread_exit</code>终止自己</li>
+</ul>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+void pthread_exit(void *value_ptr);
+</code></pre>
+
+<p>需要注意，<code>pthread_exit</code>或者<code>return</code>返回的指针所指向的内存单元必须是全局的或者是用<code>malloc</code>分配的，不能在线程函数的栈上分配，因为当其它线程得到这个返回指针时线程函数已经退出了。</p>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+int pthread_join(pthread_t thread, void **value_ptr);
+</code></pre>
+
+<p>调用<code>pthread_join</code>的线程将会阻塞，直到线程<code>thread</code>结束。我们可以根据<code>value_ptr</code>中的内容，查看线程的退出状态。</p>
+
+<p><code>pthread_create</code>和<code>pthread_join</code>函数可以通过结构指针传递不止一个参数。但是这个结构所使用的内存在调用完成后必须仍然有效。</p>
+
+<p>线程可以调用<code>pthread_cancel</code>函数来请求取消同一进程中的其他线程</p>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+int pthread_cancel(pthread_t thread);
+</code></pre>
+
+<p>线程的实际终止和<code>pthread_cancel</code>函数调用时<strong>异步</strong>的。函数成功得到返回值，仅仅代表成功发出请求，并不代表线程已经终止。</p>
+
+<h2 id="线程同步">线程同步</h2>
+
+<p>对于多线程的程序，访问冲突的问题是很普遍的，解决的办法是引入互斥锁（Mutex，Mutual Exclusive Lock），获得锁的线程可以完成“读-修改-写”的操作，然后释放锁给其它线程，没有获得锁的线程只能等待而不能访问共享数据，这样“读-修改-写”三步操作组成一个原子操作，要么都执行，要么都不执行，不会执行到中间被打断，也不会在其它处理器上并行做这个操作。</p>
+
+<p>Mutex用pthread_mutex_t类型的变量表示，可以这样初始化和销毁：</p>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
+int pthread_mutex_init(pthread_mutex_t *restrict mutex,
+       const pthread_mutexattr_t *restrict attr);
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+</code></pre>
+
+<p>用<code>pthread_mutex_init</code>函数初始化的Mutex可以用<code>pthread_mutex_destroy</code>销毁。如果Mutex变量是静态分配的（全局变量或static变量），也可以用宏定义<code>PTHREAD_MUTEX_INITIALIZER</code>来初始化，相当于用<code>pthread_mutex_init</code>初始化并且<code>attr</code>参数为<code>NULL</code>。Mutex的加锁和解锁操作可以用下列函数：</p>
+
+<pre><code class="language-c">#include &lt;pthread.h&gt;
+
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
+</code></pre>
+
+<p>一个线程可以调用<code>pthread_mutex_lock</code>获得Mutex，如果这时另一个线程已经调用<code>pthread_mutex_lock</code>获得了该Mutex，则当前线程需要挂起等待，直到另一个线程调用<code>pthread_mutex_unlock</code>释放Mutex，当前线程被唤醒，才能获得该Mutex并继续执行。</p>
+
+<p>如果一个线程既想获得锁，又不想挂起等待，可以调用<code>pthread_mutex_trylock</code>，如果Mutex已经被另一个线程获得，这个函数会失败返回EBUSY，而不会使线程挂起等待。以下为一个简单的双线程计数器代码：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;pthread.h&gt;
+
+#define NLOOP 5000
+
+int counter;
+pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *doit(void *);
+
+int main(int argc, char *argv[])
+{
+	pthread_t tidA, tidB;
+	pthread_create(&amp;tidA, NULL, doit, NULL);
+	pthread_create(&amp;tidB, NULL, doit, NULL);
+	pthread_join(tidA, NULL);
+	pthread_join(tidB, NULL);
+
+	return 0;
+}
+
+void *doit(void *vptr)
+{
+	int i, val;
+	for (i = 0; i &lt; NLOOP; i++) {
+		pthread_mutex_lock(&amp;counter_mutex);
+
+		val = counter;
+		printf(&quot;%x: %d\n&quot;, (unsigned int)pthread_self(), val+1);
+		counter = val + 1;
+
+		pthread_mutex_unlock(&amp;counter_mutex);
+	}
+
+	return NULL;
+}
+</code></pre>
+
+<p>以上程序的运行结果为10000，不会出现多线程访问冲突的情况。假如将Mutux部分注释掉运行程序，结果可能会出现错误。</p>
                         </div>
 
                         
@@ -251,15 +300,15 @@ python setup.py install
     <h2>See Also</h2>
     <ul class="listing">
         
+        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
+        
         <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
         
         <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
-        
         <li><a href="https://Hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></li>
-        
-        <li><a href="https://Hanfeng.ink/post/jin/">三家分晋</a></li>
         
     </ul>
 </div>
@@ -269,9 +318,11 @@ python setup.py install
                             
                             <ul class="clearfix">
                                 
-                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E7%BA%BF%E7%A8%8B">线程</a></li>
                                 
                                 <li><a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80">C语言</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/linux">Linux</a></li>
                                 
                             </ul>
                             
