@@ -154,7 +154,8 @@ void printids(const char *s)
 	pthread_t tid;
 	pid = getpid();
 	tid = pthread_self();
-	printf(&quot;%s pid %u tid %u (0x%x)\n&quot;, s, (unsigned int)pid, (unsigned int)tid, (unsigned int)tid);
+	printf(&quot;%s pid %u tid %u (0x%x)\n&quot;, s, (unsigned int)pid, 
+	                      (unsigned int)tid, (unsigned int)tid);
 }
 
 /* thread function */
