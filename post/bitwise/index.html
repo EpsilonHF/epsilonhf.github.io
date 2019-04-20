@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>感知机 | 寒枫的博客</title>
-    <meta property="og:title" content="感知机 - 寒枫的博客">
+    <title>Leetcode 137 —— 位操作解法 | 寒枫的博客</title>
+    <meta property="og:title" content="Leetcode 137 —— 位操作解法 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2019-04-20T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2018-09-12T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2019-04-20T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="感知机">
+    <meta name="description" content="Leetcode 137 —— 位操作解法">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/perceptron/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/bitwise/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,16 +78,16 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">感知机</h1>
+                            <h1 class="post-title">Leetcode 137 —— 位操作解法</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2018年9月12日
+                            2019年4月20日
                         </date>
                         
                         <div class="post-meta">
                             <span>|</span>
                             
-                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></span>
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E7%AE%97%E6%B3%95">算法</a></span>
                             
                         </div>
                         
@@ -97,91 +97,119 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>感知机是一种二分类的线性分类模型，感知机的核心思想是在特征空间中找到一个超平面，将所有的实例分隔为正例和反例。</p>
+                            <p>本文讨论了leetcode 137——signle number，的通用解题方法。主要参考了该题<a href="https://leetcode.com/problems/single-number-ii/discuss/43295/Detailed-explanation-and-generalization-of-the-bitwise-operation-method-for-single-numbers">讨论区的回答</a>，英文较好的同学建议阅读原文。</p>
 
-<h3 id="1-分类策略">1.分类策略</h3>
+<h2 id="问题">问题</h2>
 
-<p>假设在特征空间 $R^N$ 中，定义一个超平面：
-$$W\cdot X+b=0$$</p>
+<p><a href="https://leetcode.com/problems/single-number-ii/">Leetcode 137. Single Number II</a>的问题描述如下：</p>
 
-<p>对任一点 $X_i，W\cdot X_i+b &gt; 0，y_i = 1$，反之 $y_i=-1$。</p>
+<p>已知有一个非空的数列，数列中的元素，除了一个只出现1次，其他元素均出现3次，找出那个只出现一次的元素。</p>
 
-<p>进一步，我们改写式子 $X_i = (1, x_1,&hellip;.,x_n),~W=(b, w_1,&hellip;,w_n)$，超平面的数学表达式改为：</p>
+<p><strong>举例：</strong>
+Input: [2,2,3,2]
+Output: 3</p>
 
-<p>$$W\cdot X = 0$$</p>
+<p>如果不考虑空间复杂度，问题就很简单：我们只需要遍历所有的元素，用一个哈希表记录所有元素出现的次数，输出出现次数为1的元素，但这种方法的空间复杂度为 $O(n)$。这道题有趣的地方在于，可以使用空间复杂度为 $O(1)$ 的方法解决，即不管输入的数组有多长，只需要恒定数量的额外空间，就可以解决该问题。</p>
 
-<h3 id="2-学习策略">2.学习策略</h3>
+<h2 id="简单方法">简单方法</h2>
 
-<p>感知机的学习策略十分简单：</p>
-
-<ul>
-<li>初始化一个超平面 $W_0, b_0$</li>
-
-<li><p>遍历样本中的每个点：</p>
+<p>解决这个问题的分析思路是：我们要想一种优雅的方法，<strong>使重复3次的数字相互抵消</strong>，最后剩下只出现一次的数字。这里面的难点有两个：</p>
 
 <ul>
-<li>假如超平面分类正确，不做任何修改</li>
-
-<li><p>假如超平面分类错误，修改超平面的方向，使平面的向误分类点的一侧移动，$\eta$ 为学习率或步长
-$$W_{n+1} = W_n + \eta y_iX_i$$</p></li>
-
-<li><p>如果所有的点都分类正确，结束循环。</p></li>
-</ul></li>
+<li>我们必须保证重复数字的抵消操作和数字出现的顺序无关，即不论数字以何种顺序出现，最终抵消的结果应该一致。</li>
+<li>如何使用恒定空间保存所有的数字信息。</li>
 </ul>
 
-<p><img src="https://Hanfeng.ink/image/perceptron/Perceptron.png" alt="" /></p>
+<p>一个简答的方法是，将所有的数字转化为2进制的表达。接着我们建立一个32位的数组<code>count</code>，<code>count</code>数组的第i个元素记录了所有2进制数字在第i位为1的次数总和。举个简单的例子：</p>
 
-<p>假如样本线性可分，根据我们的直观经验，必然存在多个超平面可以完美的将所有的样本正确分隔开。因此，不同的初始化平面，不同的学习率，会导致我们最终得到的不同感知机（感知机不唯一）。</p>
+<p>假如数组为[2, 2, 2, 1]那么将数组转化为二进制即为[10, 10, 10, 1]。我们遍历数组，记录数组每一位的总和，得到：<code>count[0] = 1, count[1] = 3</code>。这里我们不难发现，如果把只重复一次的数字从原始数组中去掉，那么<code>count</code>数组中每个元素都必然可以被3整除。因此只需要求<code>count</code>数组中所有元素除以3的余数，就实现了对于重复3次数字的相互抵消。</p>
 
-<h3 id="3-先决条件和收敛证明">3. 先决条件和收敛证明</h3>
+<p>具体代码如下：</p>
 
-<p>由1.2可知，感知的训练过程是一个不断循环的过程，我们要最终得到一个感知机，则循环必须终止，而循环终止有两个条件：</p>
+<pre><code class="language-python">class Solution:
+    def singleNumber(self, nums: List[int]) -&gt; int:
+        ans = 0
+        for i in range(32):
+            count = 0
+            # count 1 bit on ith  
+            for num in nums:
+                if (num &gt;&gt; i) &amp; 1:
+                    count += 1
+            
+            ans |= (count % 3) &lt;&lt; i
+        
+        # if ans &gt; 2**31, it must be a negative number
+        return ans if ans &lt; 2**31 else ans - 2**32
+</code></pre>
+
+<p>该方法可以从重复3次扩展到重复n次，处理思路相同。</p>
+
+<h2 id="位操作方法">位操作方法</h2>
+
+<p>上面的方法已经能够很好的解决这个问题，但我们还可以使用简单的位操作进一步优化，使算法更加简洁优雅。</p>
+
+<p>我们先考虑一种简单的情况，即数列中的元素都重复两次，只有一个重复一次，找出重复一次的元素，代码如下：</p>
+
+<pre><code class="language-python">class Solution:
+    def singleNumber(self, nums: List[int]) -&gt; int:
+        ans = 0
+        for num in nums:
+            ans ^= num
+        
+        return ans
+</code></pre>
+
+<p>方法及其简单，只需要对每个数依次进行<code>XOR</code>操作，即可获得最终的答案。在这里我们利用的异或的几个重要特性：</p>
 
 <ul>
-<li>样本本身线性可分（存在平面可以正确分隔所有的点）</li>
-<li>平面在经过有限次的迭代后，能够正确的分类</li>
+<li>改变异或操作的顺序并不影响结果，即 A <code>XOR</code> B XOR C =  B <code>XOR</code> C <code>XOR</code> A</li>
+<li>A <code>XOR</code> 0 = A</li>
+<li>A <code>XOR</code> A = 0</li>
 </ul>
 
-<p>现在我们假设样本S中所有的点在特征空间中线性可分，存在一个平面 $W_f$ 将所有的点正确分类。因此：</p>
+<p>由于相同的数进行异或会变为0，导致所有重复两次的数全部抵消为0，最终只剩下出现一次的数。</p>
 
-<p>$$y_n W_f\cdot X_n\geq\min_{i}y_i W_f\cdot X_i&gt;0$$</p>
+<p>当所有元素重复3次时，简单的异或显然无法得到最终的解，我们需要在之前思路的基础上，进行简单的构造，具体代码如下：</p>
 
-<p>假设我们初始化的 $W_0 = 0$，已知每次迭代：</p>
+<pre><code class="language-python">class Solution:
+    def singleNumber(self, nums: List[int]) -&gt; int:
+        one = two = 0
+        for num in nums:
+            one = (one ^ num) &amp; ~two
+            two = (two ^ num) &amp; ~one
+        
+        return one
+</code></pre>
 
-<p>$W_n = W_{n-1} + \eta y_{n-1}X_{n-1}$</p>
+<p>虽然位操作的运算看起来比较复杂，但是核心的思路很简单：</p>
 
-<p>$W_f\cdot W_n = W_f\cdot (W_{n-1} + \eta y_{n-1}X_{n-1}) \geq  W_f\cdot W_{n-1} + \eta\min_{i} y_iW_f\cdot X_i$</p>
+<ul>
+<li><code>one</code>中保存了所有出现一次的数的异或结果</li>
+<li><code>two</code>中保存了所有出现二次的数的异或结果</li>
+</ul>
 
-<p>$~~~~~~~~~~~~~\geq n~\eta \min_{i} y_iW_f\cdot X_i$</p>
+<p>举个简单的例子，假设数字5连续出现3次：</p>
 
-<p>由于只有当分类错误时，感知器才会迭代更新：</p>
+<p>第一次、<code>one</code> = 5, <code>two</code> = 0</p>
 
-<p>$$y_nW_n\cdot X_n &lt; 0$$</p>
+<p>第二次、<code>one</code> = 0, <code>two</code> = 5</p>
 
-<p>$||W_{n}||^2 = ||W_{n-1} + \eta y_{n-1}X_{n-1}||^2 = ||W_{n-1}||^2 + 2\eta y_{n-1}W_{n-1}\cdot X_{n-1} + ||\eta y_{n-1}X_{n-1}||^2$</p>
+<p>第三次、<code>one</code> = 0, <code>two</code> = 0</p>
 
-<p>$~~~~~~~~~~~~~~~\leq ||W_{n-1}||^2 +   ||\eta y_{n-1}X_{n-1}||^2 \leq ||W_{n-1}||^2 + ||\eta X_{longest}||^2$</p>
+<h3 id="构造的原理">构造的原理</h3>
 
-<p>$~~~~~~~~~~~~~~~\leq n  ||\eta X_{longest}||^2$</p>
+<p>首先我们需要回答一个问题：为什么当元素重复2次时，我们只需要构造一个数，而元素重复3次时，我们需要构造两个数？</p>
 
-<p>这里我们求迭代后的平面向量 $W_n$ 与 $W_f$ 之间的夹角$\theta$，两个向量的夹角越小，他们之间的相似度越高。</p>
+<p>虽然我们只需要输出出现一次的元素，但在整个遍历过程中，需要保存所有的中间状态信息。虽然遍历结束时，仅有2种状态（出现一次、出现三次），但在遍历的过程中，其实存在三种状态（出现一次、出现两次、出现三次），所以必须构造第二个数，如果仅仅用一个数保存所有的状态会导致信息的丢失。以此类推，如果元素重复了 n 次，我们需要构造 n - 1 个数。</p>
 
-<p>$\cos\theta = \frac{W_f\cdot W_{n}}{||W_f||||W_{n}||}\geq\frac{n~\eta\min_{i} y_iW_f\cdot X_i}{\sqrt{ n \eta}||W_f|| ||X_{longest}|| } = \sqrt{n} \frac{\sqrt{\eta }\min_{i} y_iW_f\cdot X_i}{||W_f|| ||X_{longest}||} = \sqrt{n} \times
-constant$</p>
+<p>现在进一步解释位操作表达式，其过程如下：</p>
 
-<p>$\cos\theta \sim O(\sqrt{n})$</p>
+<ul>
+<li>当接收一个新的数字时，我们先对其进行<code>XOR</code>的操作</li>
+<li>假如该数字出现的次数与我们构造的情形不符，则清除上一步操作</li>
+</ul>
 
-<p>$\cos\theta$ 随着迭代的次数增加，越来越大，意味着经过迭代 $W_n$ 与 $W_f$ 越来越接近，因为 $\cos\theta \leq 1$，因此经过有限次的迭代，就可以得到完美分类的感知机。</p>
-
-<h3 id="4-样本线性不可分的情况">4.样本线性不可分的情况</h3>
-
-<p>假如样本在特征空间中线性不可分，那么我们永远无法得到一个完美的感知机，在这种情况下，我们只能退而求其次，使感知机的错误尽可能的少。</p>
-
-<p>$$W_g = argmin \sum_{i=1}^N [y_n \neq sign(W\cdot X_n)]$$</p>
-
-<p>但求解这个最优问题是个NP问题，在实际操作中，我们保存一个分类效果最好的感知机，在每次更新感知机后，我们计算感知机的分类误差，如果新的感知机效果更好，就将新得到的感知机保存为最优感知机。</p>
-
-<p>我们限制一定的迭代次数，最终得到一个近似的最优感知机。</p>
+<p>举个简单的例子，当5第三次出现时，<code>one</code>会先做一个<code>XOR</code>操作，将5的信息保留下来，然后发现5是第三次出现，必须撤销上一步的<code>XOR</code>操作。<code>XOR</code>操作的逻辑是在字节为0的位不变，为1的位取反；因为该数的信息保存在<code>two</code>中，我们只需要做<code>&amp; ~two</code>，就可以达到撤销之前操作的目的。</p>
                         </div>
 
                         
@@ -190,11 +218,15 @@ constant$</p>
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/post/mutual_information/">信息熵和互信息</a></li>
+        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/shuihu_chaogai/">《水浒传》——晁盖之死</a></li>
+        <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
         
-        <li><a href="https://Hanfeng.ink/archives/">归档</a></li>
+        <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/thread/">线程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
         
     </ul>
 </div>
@@ -204,11 +236,11 @@ constant$</p>
                             
                             <ul class="clearfix">
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C">位操作</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB">分类</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B">判别模型</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/leetcode">Leetcode</a></li>
                                 
                             </ul>
                             

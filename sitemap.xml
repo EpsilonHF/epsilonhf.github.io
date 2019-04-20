@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://Hanfeng.ink/post/bitwise/</loc>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://Hanfeng.ink/post/thread/</loc>
     <lastmod>2019-04-06T00:00:00+00:00</lastmod>
   </url>
@@ -79,6 +84,12 @@
   </url>
   
   <url>
+    <loc>https://Hanfeng.ink/tags/leetcode/</loc>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://Hanfeng.ink/tags/linux/</loc>
     <lastmod>2019-04-06T00:00:00+00:00</lastmod>
     <priority>0</priority>
@@ -92,13 +103,13 @@
   
   <url>
     <loc>https://Hanfeng.ink/post/</loc>
-    <lastmod>2019-04-06T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://Hanfeng.ink/tags/python/</loc>
-    <lastmod>2019-03-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -117,6 +128,12 @@
   <url>
     <loc>https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/</loc>
     <lastmod>2019-01-17T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C/</loc>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -146,7 +163,7 @@
   
   <url>
     <loc>https://Hanfeng.ink/</loc>
-    <lastmod>2019-04-06T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -205,6 +222,12 @@
   <url>
     <loc>https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2019-01-17T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://Hanfeng.ink/categories/%E7%AE%97%E6%B3%95/</loc>
+    <lastmod>2019-04-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
