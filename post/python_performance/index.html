@@ -248,28 +248,28 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
 <pre><code class="language-python"> &quot;&quot;&quot;
  原始代码
  &quot;&quot;&quot;
-        if not isinstance(func, str):
-            raise TypeError(&quot;Please input a string as cost function name&quot;)
-        if func  == &quot;normal_mean&quot;:
-        	self.func = normal_mean
-        elif func == &quot;normal_var&quot;:
-        	self.func = normal_val
+	if not isinstance(func, str):
+		raise TypeError(&quot;Please input a string as cost function name&quot;)
+	if func  == &quot;normal_mean&quot;:
+		self.func = normal_mean
+	elif func == &quot;normal_var&quot;:
+		self.func = normal_val
         ...
  &quot;&quot;&quot;
  用字典重构 
  &quot;&quot;&quot;
-         func_dict = {
-            &quot;normal_mean&quot;: normal_mean,
-            &quot;normal_var&quot;: normal_var,
-            &quot;normal_meanvar&quot;: normal_meanvar,
-            &quot;poisson&quot;: poisson,
-            &quot;exp&quot;: exponential
-        }
+ 	func_dict = {
+ 		&quot;normal_mean&quot;: normal_mean,
+ 		&quot;normal_var&quot;: normal_var,
+ 		&quot;normal_meanvar&quot;: normal_meanvar,
+ 		&quot;poisson&quot;: poisson,
+ 		&quot;exp&quot;: exponential
+ 	}
 
-        if not isinstance(func, str):
-            raise TypeError(&quot;Please input a string as cost function name&quot;)
-        if func in func_dict:
-            self.func = func_dict[func]
+	if not isinstance(func, str):
+		raise TypeError(&quot;Please input a string as cost function name&quot;)
+	if func in func_dict:
+		self.func = func_dict[func]
 </code></pre>
 
 <p>用字典重构后，使代码更加简洁，逻辑清晰且易于维护</p>
