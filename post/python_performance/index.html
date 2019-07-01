@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Python代码性能优化方法总结 | 寒枫的博客</title>
+    <meta property="og:title" content="Python代码性能优化方法总结 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2019-06-29T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2019-06-29T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="Python代码性能优化方法总结">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/python_performance/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">业精于勤荒于嬉，行成于思毁于随</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">Python代码性能优化方法总结</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2019年6月29日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/python">Python</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>本文简单总结了常用的python性能优化方法</p>
+
+<h2 id="python为什么慢">Python为什么慢</h2>
+
+<p>在进行代码的性能优化之前，我们先简单分析Python性能较低的原因</p>
+
+<h3 id="过于强大的动态">过于强大的动态</h3>
+
+<p>Python是一个非常动态的语言，而这使得为Python提供JIT(Just in Time Compiler)异常困难。更加具体的内容可以阅读这篇文章<a href="http://blog.kevmod.com/2016/07/why-is-python-slow/">why is python slow</a></p>
+
+<h3 id="内存分布不紧凑">内存分布不紧凑</h3>
+
+<p>由于python数据内存分布不紧凑，导致没有很好的利用L1/L2 缓存进行加速。</p>
+
+<p>由于硬件技术的限制，我们可以制造出容量很小但很快的存储器，也可以制造出容量很大但很慢的存储器，但不可能两边的好处都占着，不可能制造出访问速度又快容量又大的存储器。因此，现代计算机都把存储器分成若干级，称为Memory Hierarchy，按照离CPU由近到远的顺序依次是CPU寄存器、Cache、内存、硬盘，越靠近CPU的存储器容量越小但访问速度越快。</p>
+
+<p><img src="https://Hanfeng.ink/image/python_performance/memory_hierarchy.png" alt="" /></p>
+
+<p>大多数程序的行为都具有局部性（Locality）的特点：它们会花费大量的时间反复执行一小段代码（例如循环），或者反复访问一个很小的地址范围中的数据（例如访问一个数组）。所以预读缓存可以有效的提高程序的运行效率：CPU取一条指令，我把和它相邻的指令也都缓存起来，CPU很可能马上就会取到；CPU访问一个数据，我把和它相邻的数据也都缓存起来，CPU很可能马上就会访问到。</p>
+
+<p>但由于python的数据缺乏局部性的特点，导致于都缓存的失效，以下显示了一个列表内部元素的地址分布情况：</p>
+
+<pre><code class="language-python">&gt;&gt;&gt; a = [1, 100, 'string', 'zhf']
+&gt;&gt;&gt; for element in a:
+...     print(id(element))
+...
+4310279600
+4310282768
+4313350920
+4318726608
+</code></pre>
+
+<p>更加具体的相关内容，可以阅读<a href="https://book.douban.com/subject/26912767/">《深入理解计算机系统》</a>第六章</p>
+
+<h2 id="性能分析工具">性能分析工具</h2>
+
+<h3 id="cprofile">cProfile</h3>
+
+<p>在进行优化时，我们需要合适的工具来进行性能分析，找到性能的瓶颈，这里推荐使用<code>cProfile</code>模块，<a href="https://docs.python.org/3/library/profile.html">官方文档</a></p>
+
+<p>我们可以在运行python脚本时，使用工具，分析各个调用占用的时间，我们写一个简单的程序：</p>
+
+<pre><code class="language-python">def fab(num):
+    if num == 1:
+        return 1
+    elif num == 2:
+        return 1
+    else:
+        return fab(num-1) + fab(num-2)
+
+if __name__ == &quot;__main__&quot;:
+    fab(40)
+</code></pre>
+
+<p>对以上程序进行性能分析：</p>
+
+<pre><code class="language-bash">$ python -m cProfile -s cumulative sample.py
+         1664082 function calls (4 primitive calls) in 0.370 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.370    0.370 {built-in method builtins.exec}
+        1    0.000    0.000    0.370    0.370 sample.py:1(&lt;module&gt;)
+1664079/1    0.370    0.000    0.370    0.370 sample.py:1(fab)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+</code></pre>
+
+<ul>
+<li>第一行：1664082个函数调用被监控，其中4个是原生调用（不涉及递归）</li>
+<li>ncalls：函数被调用的次数。如果这一列有两个值，就表示有递归调用，第二个值是原生调用次数，第一个值是总调用次数。</li>
+<li>tottime：函数内部消耗的总时间。（可以帮助优化）</li>
+<li>percall：是tottime除以ncalls，一个函数每次调用平均消耗时间。</li>
+<li>cumtime：之前所有子函数消费时间的累计和。</li>
+<li>filename:lineno(function)：被分析函数所在文件名、行号、函数名。</li>
+</ul>
+
+<h3 id="timeit">%timeit</h3>
+
+<p>在<code>IPython</code>交互界面下，可以使用<code>%timeit</code>查看特定函数调用的时间</p>
+
+<pre><code class="language-python">In [8]: %timeit b()
+774 µs ± 4.2 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+</code></pre>
+
+<h2 id="优化方法">优化方法</h2>
+
+<p>下面从数据结构，算法，程序实现等几个角度总结了常用的性能优化方法，这些方法并不仅限于python</p>
+
+<h3 id="列表">列表</h3>
+
+<p>当我们要将一串<strong>长度固定</strong>的数子放入列表中，有两种方法：</p>
+
+<pre><code class="language-python"># 方法一
+def method1():
+	a = []
+	for i in range(100):
+		a.append(i)
+		
+# 方法二
+def method2():
+	a = [0] * 100
+	for i in range(100):
+		a[i] = 100
+</code></pre>
+
+<p>当列表的长度较大时，方法二较方法一有明显的性能优势，原因在于方法一的列表需要不断的动态扩张和重新分配内存空间，关于动态表扩张和收缩的策略，可以看《算法导论》第17章第4节。</p>
+
+<p>以下是<code>cpython 3.6</code>关于<code>list</code>动态分配内存的<a href="https://github.com/python/cpython/blob/3.6/Modules/arraymodule.c#L111">源代码</a>：</p>
+
+<pre><code class="language-c">static int
+array_resize(arrayobject *self, Py_ssize_t newsize)
+{
+    char *items;
+    size_t _new_size;
+    ...
+
+    _new_size = (newsize &gt;&gt; 4) + (Py_SIZE(self) &lt; 8 ? 3 : 7) + newsize;
+    items = self-&gt;ob_item;
+    /* XXX The following multiplication and division does not optimize away
+       like it does for lists since the size is not known at compile time */
+    if (_new_size &lt;= ((~(size_t)0) / self-&gt;ob_descr-&gt;itemsize))
+        PyMem_RESIZE(items, char, (_new_size * self-&gt;ob_descr-&gt;itemsize));
+    else
+        items = NULL;
+    if (items == NULL) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    self-&gt;ob_item = items;
+    Py_SIZE(self) = newsize;
+    self-&gt;allocated = _new_size;
+    return 0;
+}
+</code></pre>
+
+<p>关于这部分的具体解释，可参考博文 <a href="https://hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></p>
+
+<h3 id="集合与字典">集合与字典</h3>
+
+<p>合适的使用集合与字典能够极大的提升程序的效率和可读性</p>
+
+<h4 id="当需要判断一个元素是否在队列中时-最好用集合-不要用列表">当需要判断一个元素是否在队列中时，最好用集合，不要用列表</h4>
+
+<p>针对列表的<code>in</code>方法，实际是遍历整个列表，复杂度为 $O(n)$，而对集合与字典本质上是哈希表，对其的<code>in</code>方法复杂度为 $O(1)$</p>
+
+<h4 id="当需要用-if-else-做大量的分支判断-且分支判断的方法为-时-最好使用字典的方式">当需要用<code>if else</code>做大量的分支判断，且分支判断的方法为<code>==</code>时，最好使用字典的方式</h4>
+
+<pre><code class="language-python"> &quot;&quot;&quot;
+ 原始代码
+ &quot;&quot;&quot;
+        if not isinstance(func, str):
+            raise TypeError(&quot;Please input a string as cost function name&quot;)
+        if func  == &quot;normal_mean&quot;:
+        	self.func = normal_mean
+        elif func == &quot;normal_var&quot;:
+        	self.func = normal_val
+        ...
+ &quot;&quot;&quot;
+ 用字典重构 
+ &quot;&quot;&quot;
+         func_dict = {
+            &quot;normal_mean&quot;: normal_mean,
+            &quot;normal_var&quot;: normal_var,
+            &quot;normal_meanvar&quot;: normal_meanvar,
+            &quot;poisson&quot;: poisson,
+            &quot;exp&quot;: exponential
+        }
+
+        if not isinstance(func, str):
+            raise TypeError(&quot;Please input a string as cost function name&quot;)
+        if func in func_dict:
+            self.func = func_dict[func]
+</code></pre>
+
+<p>用字典重构后，使代码更加简洁，逻辑清晰且易于维护</p>
+
+<h4 id="尽量避免创建过大的字典">尽量避免创建过大的字典</h4>
+
+<p>字典的本质是哈希表，关于哈希表的原理，可以阅读《算法导论》第11章。我们知道，哈希表的扩张会消耗大量的时间，而python的<code>dict</code>默认的最小长度是16
+每次改变大小时，当哈希表的装载因子大于0.5或小于0.1时，哈希表将重新散列，<code>slot</code>的个数为现有元素的3.3倍，并保证是 $2^n$，<code>Python 3.6</code> <a href="https://github.com/python/cpython/blob/3.6/Modules/hashtable.c">源代码</a>如下：</p>
+
+<pre><code class="language-c">...
+#define HASHTABLE_MIN_SIZE 16
+#define HASHTABLE_HIGH 0.50
+#define HASHTABLE_LOW 0.10
+#define HASHTABLE_REHASH_FACTOR 2.0 / (HASHTABLE_LOW + HASHTABLE_HIGH)
+...
+/* makes sure the real size of the buckets array is a power of 2 */
+static size_t
+round_size(size_t s)
+{
+    size_t i;
+    if (s &lt; HASHTABLE_MIN_SIZE)
+        return HASHTABLE_MIN_SIZE;
+    i = 1;
+    while (i &lt; s)
+        i &lt;&lt;= 1;
+    return i;
+}
+...
+/* 重新分配哈希表内存空间 */
+static void
+hashtable_rehash(_Py_hashtable_t *ht)
+{
+    size_t buckets_size, new_size, bucket;
+    _Py_slist_t *old_buckets = NULL;
+    size_t old_num_buckets;
+
+    new_size = round_size((size_t)(ht-&gt;entries * HASHTABLE_REHASH_FACTOR));
+...
+
+static int
+_Py_hashtable_pop_entry(_Py_hashtable_t *ht, size_t key_size, const void *pkey,
+                        void *data, size_t data_size)
+{
+...
+    /* 如果装载因子小于0.1，重新散列 */
+    if ((float)ht-&gt;entries / (float)ht-&gt;num_buckets &lt; HASHTABLE_LOW) 
+        hashtable_rehash(ht);
+    return 1;
+}
+
+
+int
+_Py_hashtable_set(_Py_hashtable_t *ht, size_t key_size, const void *pkey,
+                  size_t data_size, const void *data)
+{
+...
+    /* 如果装载因子大于0.5，重新散列 */
+    if ((float)ht-&gt;entries / (float)ht-&gt;num_buckets &gt; HASHTABLE_HIGH)  
+        hashtable_rehash(ht);
+    return 0;
+}
+</code></pre>
+
+<h3 id="尾递归">尾递归</h3>
+
+<p>当我们调用一个函数时，cpu会在内存空间上开辟一个对应的函数栈帧，栈帧中保存函数的局部变量、框架等，当函数调用结束返回结果后，栈帧会被释放。我们写一个简单的C语言程序：</p>
+
+<pre><code class="language-c">int bar(int c, int d)
+{
+	int e = c + d;
+	return e;
+}
+
+int foo(int a, int b)
+{
+	return bar(a, b);
+}
+
+int main(void)
+{
+	foo(2, 3);
+	return 0;
+}
+</code></pre>
+
+<p>对上述代码进行编译，并反汇编，得到汇编代码，查看相关内容：</p>
+
+<pre><code class="language-as">08048394 &lt;bar&gt;:
+int bar(int c, int d)
+{
+ 8048394:	55                   	push   %ebp
+ 8048395:	89 e5                	mov    %esp,%ebp
+ 8048397:	83 ec 10             	sub    $0x10,%esp
+	int e = c + d;
+ 804839a:	8b 55 0c             	mov    0xc(%ebp),%edx
+ 804839d:	8b 45 08             	mov    0x8(%ebp),%eax
+ 80483a0:	01 d0                	add    %edx,%eax
+ 80483a2:	89 45 fc             	mov    %eax,-0x4(%ebp)
+	return e;
+ 80483a5:	8b 45 fc             	mov    -0x4(%ebp),%eax
+}
+ 80483a8:	c9                   	leave  
+ 80483a9:	c3                   	ret    # 退出栈帧
+
+080483aa &lt;foo&gt;:
+
+int foo(int a, int b)
+{
+ 80483aa:	55                   	push   %ebp
+ 80483ab:	89 e5                	mov    %esp,%ebp
+ 80483ad:	83 ec 08             	sub    $0x8,%esp
+	return bar(a, b);
+ 80483b0:	8b 45 0c             	mov    0xc(%ebp),%eax
+ 80483b3:	89 44 24 04          	mov    %eax,0x4(%esp)
+ 80483b7:	8b 45 08             	mov    0x8(%ebp),%eax
+ 80483ba:	89 04 24             	mov    %eax,(%esp)
+ 80483bd:	e8 d2 ff ff ff       	call   8048394 &lt;bar&gt;   # 进入函数bar的栈帧
+}
+ 80483c2:	c9                   	leave  
+ 80483c3:	c3                   	ret    # 退出栈帧
+</code></pre>
+
+<p>函数调用的顺序如下：</p>
+
+<ul>
+<li>调用<code>foo</code>，分配对应函数栈</li>
+<li>运行到<code>80483bd</code>，调用函数<code>bar</code>，分配对应函数栈</li>
+<li>运行到<code>80483a9</code>，退出<code>bar()</code>的函数栈帧</li>
+<li>运行到<code>80483c3</code>，退出<code>foo()</code>的函数栈帧</li>
+</ul>
+
+<p>当调用递归函数时，每次重复调用函数都会新开一个函数栈，导致内存大量被占用，如果对代码进行尾递归的优化，能够提高内存空间的使用效率，代码如下：</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;
+原始代码
+&quot;&quot;&quot;
+def recsum(x):
+  if x == 1:
+    return x
+  else:
+    return x + recsum(x - 1)
+    
+&quot;&quot;&quot;
+尾递归优化后代码
+&quot;&quot;&quot;   
+ def tailrecsum(x, running_total=0):
+  if x == 0:
+    return running_total
+  else:
+    return tailrecsum(x - 1, running_total + x)
+</code></pre>
+
+<p>尾递归的具体内容可参考文章 <a href="http://www.ruanyifeng.com/blog/2015/04/tail-call.html">尾调用优化</a></p>
+
+<h3 id="数学优化">数学优化</h3>
+
+<p>采用数学方法，优化复杂的计算过程，是提成程序效率的最好办法，但应用场景较少。一个例子就是通过数学方法优化斐波那契数列的计算：</p>
+
+<p><a href="https://hanfeng.ink/post/fibonacci_sequence/">斐波那契数列</a></p>
+
+<h3 id="预计算">预计算</h3>
+
+<p>当程序中存在大量重复的计算时，我们可以把这些计算的结果预先算法，存储在列表中。当需要时直接进入列表查询结果，用寻址代替浮点数的计算。</p>
+
+<p><strong>例子</strong></p>
+
+<p>将RGB颜色转化为灰值的计算：</p>
+
+<p>$$Gray = 0.299R +  0.587G + 0.114B$$</p>
+
+<p>由于R,G,B均为 0~255的整型变量，因此可以预先计算好所有结果，并将其存放到一个大的数组中。由于我们需要对每个像素点的数值进行变换，预计算可以极大的优化整体性能。</p>
+
+<h3 id="使用c语言">使用c语言</h3>
+
+<h4 id="使用c语言编写的依赖包">使用c语言编写的依赖包</h4>
+
+<p>python数值计算中有大量的依赖包是使用c语言编写的，使用这些依赖包能够极大的提高运行效率，主要原因如下：</p>
+
+<ul>
+<li>c语言的内存分配紧凑，能够很好的利用L1/L2缓存的预读取加速</li>
+<li>Python解释器翻译的c语言很冗长，运行效率低下</li>
+</ul>
+
+<h4 id="用cpython编写程序">用cpython编写程序</h4>
+
+<p>使用cpython在python程序内编写，可以明显提高运行效率。</p>
+
+<p><a href="http://docs.cython.org/en/latest/">cpython官方文档</a></p>
+
+<h4 id="将c程序封装python接口">将c程序封装python接口</h4>
+
+<p>python提供了丰富的C API，我们可以直接根据这些接口，封装c语言，然后用类似依赖包的方式直接调用c程</p>
+
+<p><a href="https://docs.python.org/zh-cn/3.6/c-api/index.html">Python/C API 参考手册</a></p>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/bitwise/">Leetcode 137 —— 位操作解法</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/arsenal/">Arsenal（长期更新）</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">数据结构</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/python_performance/" title="Python代码性能优化方法总结">Python代码性能优化方法总结</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/arsenal/" title="Arsenal（长期更新）">Arsenal（长期更新）</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/bitwise/" title="Leetcode 137 —— 位操作解法">Leetcode 137 —— 位操作解法</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/thread/" title="线程简介">线程简介</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/c_to_python/" title="将C程序封装成python库">将C程序封装成python库</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/python_to_c/" title="Python如何调用C程序">Python如何调用C程序</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/porcess/" title="进程简介">进程简介</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/jin/" title="三家分晋">三家分晋</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/amortized_analysis/" title="动态表扩张和收缩的摊还分析">动态表扩张和收缩的摊还分析</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/fibonacci_sequence/" title="斐波那契数列">斐波那契数列</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/python/">python(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统(2)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(4)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9D%82%E8%AE%B0/">杂记(2)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/leetcode/">leetcode</a>
+    
+    <a href="https://Hanfeng.ink/tags/linux/">linux</a>
+    
+    <a href="https://Hanfeng.ink/tags/python/">python</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C/">位操作</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2/">历史</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%96%87%E5%AD%A6/">文学</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E7%A8%8B/">线程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B/">进程</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>
