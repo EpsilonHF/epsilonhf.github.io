@@ -424,6 +424,51 @@ def recsum(x):
 
 <p>尾递归的具体内容可参考文章 <a href="http://www.ruanyifeng.com/blog/2015/04/tail-call.html">尾调用优化</a></p>
 
+<h3 id="算法复杂度优化">算法复杂度优化</h3>
+
+<p>分析算法的总体复杂度，找到更优秀的算法实现。</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;
+未修改前的代码
+&quot;&quot;&quot;
+
+def merge(L,k):
+    n = len(L)
+    dataMergeList = []
+    for i in range(n-1):
+        for j in range(i+1,n):
+            L1 = list(L[i])[:k]
+            L2 = list(L[j])[:k]
+            L1.sort()
+            L2.sort()
+            if L1 == L2:
+                dataMergeList.append(L[i] | L[j])
+    return dataMergeList
+
+&quot;&quot;&quot;
+修改后
+&quot;&quot;&quot;
+
+def merge(L,k):
+    n = len(L)
+    newlst = [None] * n
+    for i, lst in enumerate(L):
+        newlst[i] = sorted(list(lst)[:k])
+        
+    dataMergeList = []
+    for i in range(n-1):
+        for j in range(i+1,n):
+            L1 = newlist[i]
+            L2 = newlist[j]
+
+            if L1 == L2:
+                dataMergeList.append(L[i] | L[j])
+                
+    return dataMergeList
+</code></pre>
+
+<p>优化前代码的时间复杂度为 $O(n^2k\log k) $， 优化后代码时间复杂度为 $O(max(n ^ 2, n k \log k) )$，代码在实际的运行中获得数倍的性能提升。</p>
+
 <h3 id="数学优化">数学优化</h3>
 
 <p>采用数学方法，优化复杂的计算过程，是提成程序效率的最好办法，但应用场景较少。一个例子就是通过数学方法优化斐波那契数列的计算：</p>
