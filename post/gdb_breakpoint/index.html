@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>调试器工作原理：第二部分 断点 | 寒枫的博客</title>
+    <meta property="og:title" content="调试器工作原理：第二部分 断点 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2019-08-12T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2019-08-12T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="调试器工作原理：第二部分 断点">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/gdb_breakpoint/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">业精于勤荒于嬉，行成于思毁于随</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">调试器工作原理：第二部分 断点</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2019年8月12日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F">操作系统</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>本文是英文博客 <a href="https://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints">How debuggers work: Part 2 - Breakpoints</a> 的中文翻译，这是关于调试器如何工作的系列文章的第二部分。请务必在此之前阅读第一部分。</p>
+
+<p>本文将演示如何在调试器中实现断点。断点是调试的两个重要功能之一一 另一个功能是能够检查进程内部的变量。我们已经看过该系列第一部分中对数值检查的介绍。本文将介绍断点的工作原理。</p>
+
+<h2 id="软件中断">软件中断</h2>
+
+<p>系统使用软件中断(trap)在<code>x86</code>体系结构上实现断点。在我们深入了解细节之前，我想解释一般中断(interrupts)和陷阱(trap)的概念。</p>
+
+<p>CPU具有单个执行流，逐个处理指令。当处理IO和硬件定时器等异步事件时，CPU会使用中断。CPU使用特殊的“响应电路”，发送专用的电信号，实现硬件中断。该电路注意到中断的激活并使CPU停止其当前执行的指令，保存其状态，并跳转到预先定义的中断处理程序所在地址。当处理程序完成其工作时，CPU将恢复到中断触发前的状态，继续执行指令。</p>
+
+<p>软件中断在原理上类似，但在实现上略有不同。 CPU为软件提供模拟硬件中断的特殊指令。当执行这样的指令时，CPU将其视为中断 - 停止其正常的执行流程，保存其状态并跳转到处理程序例程。这种“陷阱”的设计使现代操作系统很多神奇的功能（任务调度，虚拟存储器，存储器保护，调试）得以实现。</p>
+
+<p>一些编程错误（例如除以0）也被CPU视为陷阱，并且通常被称为“异常”。在这里硬件和软件没有清晰的界限，因为很难说这些异常是硬件中断还是软件中断。</p>
+
+<h2 id="int-3-原理">INT 3 原理</h2>
+
+<p>简单来说，CPU通过一个名为<code>int 3</code>的特殊陷阱来实现断点。<code>int</code> 特指 <code>x86</code> 中的“陷阱指令” —— 调用预定义的中断处理函数。 <code>x86</code> 支持<code>int</code>指令带有8个操作数，用于指定中断的种类，因此理论上支持256种陷阱。前32种由CPU为自己保留，<code>int 3</code>被称为“调试器陷阱”。</p>
+
+<p>以下为INTEL开发者手册中的原文(Intel&rsquo;s Architecture software developer&rsquo;s manual)：</p>
+
+<blockquote>
+<p><code>INT 3</code>指令生成一个特殊的单字节操作码(CC)，用于调用调试异常处理程序。 （这种单字节形式很有价值，因为它可用于用断点替换任何指令的第一个字节，包括其他单字节指令，而不会覆盖其他代码）。</p>
+</blockquote>
+
+<h2 id="int-3-实现">INT 3 实现</h2>
+
+<p>具体的实现非常简单。一旦你的进程执行了<code>int 3</code>指令，操作系统就会停止它。在Linux上，操作系统会向进程发送 信号——<code>SIGTRAP</code>。</p>
+
+<p>现在回想一下本系列的第一部，跟踪（调试器）进程会通知其子进程（或它附加到调试的进程）的所有信号。接下来，我们将手动设置断点，以下为代码：</p>
+
+<pre><code>section    .text
+    ; The _start symbol must be declared for the linker (ld)
+    global _start
+
+_start:
+
+    ; Prepare arguments for the sys_write system call:
+    ;   - eax: system call number (sys_write)
+    ;   - ebx: file descriptor (stdout)
+    ;   - ecx: pointer to string
+    ;   - edx: string length
+    mov     edx, len1
+    mov     ecx, msg1
+    mov     ebx, 1
+    mov     eax, 4
+
+    ; Execute the sys_write system call
+    int     0x80
+
+    ; Now print the other message
+    mov     edx, len2
+    mov     ecx, msg2
+    mov     ebx, 1
+    mov     eax, 4
+    int     0x80
+
+    ; Execute sys_exit
+    mov     eax, 1
+    int     0x80
+
+section    .data
+
+msg1    db      'Hello,', 0xa
+len1    equ     $ - msg1
+msg2    db      'world!', 0xa
+len2    equ     $ - msg2
+</code></pre>
+
+<p>以上的代码功能很简单，在两行中分别打印 &ldquo;Hello&rdquo; 和 &ldquo;World!&ldquo;。现在我想在打印 &ldquo;Hello&rdquo; 完后设置一个断点。我们先使用 <code>objdump -d</code> 查看代码的具体位置：</p>
+
+<pre><code>traced_printer2:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000033  08048080  08048080  00000080  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         0000000e  080490b4  080490b4  000000b4  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+
+Disassembly of section .text:
+
+08048080 &lt;.text&gt;:
+ 8048080:     ba 07 00 00 00          mov    $0x7,%edx
+ 8048085:     b9 b4 90 04 08          mov    $0x80490b4,%ecx
+ 804808a:     bb 01 00 00 00          mov    $0x1,%ebx
+ 804808f:     b8 04 00 00 00          mov    $0x4,%eax
+ 8048094:     cd 80                   int    $0x80
+ 8048096:     ba 07 00 00 00          mov    $0x7,%edx
+ 804809b:     b9 bb 90 04 08          mov    $0x80490bb,%ecx
+ 80480a0:     bb 01 00 00 00          mov    $0x1,%ebx
+ 80480a5:     b8 04 00 00 00          mov    $0x4,%eax
+ 80480aa:     cd 80                   int    $0x80
+ 80480ac:     b8 01 00 00 00          mov    $0x1,%eax
+ 80480b1:     cd 80                   int    $0x80
+</code></pre>
+
+<p>我们需要在第一个 <code>int 0x80</code> 后设置断点，具体的地址是0x8048096。注意，真正的调试器在代码行和函数上设置断点，而不是在一些裸存储器地址上设置断点。但是我们距离那里还很远 —— 为了像真正的调试器那样设置断点，我们仍然必须首先阐明符号和调试信息，并且系列中还需要另外一两部分来实现这些主题。现在，我们将使用裸内存地址。</p>
+
+<h2 id="在调试器中设置断点">在调试器中设置断点</h2>
+
+<p>要在跟踪进程中的某个目标地址处设置断点，调试器将执行以下操作：</p>
+
+<ol>
+<li>记住存储在目标地址的数据</li>
+<li>用<code>int 3</code>指令替换目标地址的第一个字节</li>
+</ol>
+
+<p>然后，当调试器要求OS运行该进程时（正如我们在上一篇文章中看到的那样使用<code>PTRACE_CONT</code>），该进程将运行并最终触发 <code>int 3</code>。这是调试器再次进入的地址，接收到其子进程（或跟踪进程）已停止的信号。它可以：</p>
+
+<ol>
+<li>用原始指令替换目标地址处的 <code>int 3</code> 指令</li>
+<li>将跟踪过程的指令指针向后滚动一个。这是必需的，因为此时指令指针现在指向 <code>int 3</code> 之后，已经执行中断指令。</li>
+<li>允许用户以某种方式与进程交互，因为进程仍然在期望的目标地址处停止。此时调试器允许您查看变量值，调用堆栈等的部分。</li>
+<li>当用户想要继续运行时，除非用户要求取消断点，否则调试器将负责将断点放回目标地址（因为它已在步骤1中删除）。</li>
+</ol>
+
+<p>让我们看看其中一些步骤是如何转换为实际代码的。我们将使用第1部分中介绍的调试器“模板”（分析子进程并跟踪它）。在任何情况下，本文末尾都有一个指向该示例的完整源代码的链接。</p>
+
+<pre><code class="language-c">/* Obtain and show child's instruction pointer */
+ptrace(PTRACE_GETREGS, child_pid, 0, &amp;regs);
+procmsg(&quot;Child started. EIP = 0x%08x\n&quot;, regs.eip);
+
+/* Look at the word at the address we're interested in */
+unsigned addr = 0x8048096;
+unsigned data = ptrace(PTRACE_PEEKTEXT, child_pid, (void*)addr, 0);
+procmsg(&quot;Original data at 0x%08x: 0x%08x\n&quot;, addr, data);
+</code></pre>
+
+<p>这里调试器从跟踪进程中获取指令指针，并检查当前存在于<code>0x8048096</code>的 word。当运行跟踪本文开头列出的汇编程序时，会打印：</p>
+
+<pre><code>[13028] Child started. EIP = 0x08048080
+[13028] Original data at 0x08048096: 0x000007ba
+</code></pre>
+
+<p>接着：</p>
+
+<pre><code class="language-c">/* Write the trap instruction 'int 3' into the address */
+unsigned data_with_trap = (data &amp; 0xFFFFFF00) | 0xCC;
+ptrace(PTRACE_POKETEXT, child_pid, (void*)addr, (void*)data_with_trap);
+
+/* See what's there again... */
+unsigned readback_data = ptrace(PTRACE_PEEKTEXT, child_pid, (void*)addr, 0);
+procmsg(&quot;After trap, data at 0x%08x: 0x%08x\n&quot;, addr, readback_data);
+</code></pre>
+
+<p>注意<code>int 3</code>是如何插入目标地址的。这里会打印：</p>
+
+<pre><code>[13028] After trap, data at 0x08048096: 0x000007cc
+</code></pre>
+
+<p>正如预期的那样 ——  <code>0xba</code>被替换为<code>0xcc</code>。调试器现在运行子进程并等待它在断点处停止：</p>
+
+<pre><code class="language-c">/* Let the child run to the breakpoint and wait for it to
+** reach it
+*/
+ptrace(PTRACE_CONT, child_pid, 0, 0);
+
+wait(&amp;wait_status);
+if (WIFSTOPPED(wait_status)) {
+    procmsg(&quot;Child got a signal: %s\n&quot;, strsignal(WSTOPSIG(wait_status)));
+}
+else {
+    perror(&quot;wait&quot;);
+    return;
+}
+
+/* See where the child is now */
+ptrace(PTRACE_GETREGS, child_pid, 0, &amp;regs);
+procmsg(&quot;Child stopped at EIP = 0x%08x\n&quot;, regs.eip);
+</code></pre>
+
+<p>这部分会打印：</p>
+
+<pre><code>Hello,
+[13028] Child got a signal: Trace/breakpoint trap
+[13028] Child stopped at EIP = 0x08048097
+</code></pre>
+
+<p>最后，如前所述，为了让子进程继续运行，我们必须做一些工作。我们用原始指令替换陷阱，让进程继续运行。</p>
+
+<pre><code class="language-c">/* Remove the breakpoint by restoring the previous data
+** at the target address, and unwind the EIP back by 1 to
+** let the CPU execute the original instruction that was
+** there.
+*/
+ptrace(PTRACE_POKETEXT, child_pid, (void*)addr, (void*)data);
+regs.eip -= 1;
+ptrace(PTRACE_SETREGS, child_pid, 0, &amp;regs);
+
+/* The child can continue running now */
+ptrace(PTRACE_CONT, child_pid, 0, 0);
+</code></pre>
+
+<p>请注意，我们不会在此处恢复断点。这可以通过在单步模式下执行原始指令，然后放回陷阱然后再执行<code>PTRACE_CONT</code> 来完成。本文后面演示的调试库实现了这一点。</p>
+
+<h2 id="回到-int-3">回到 INT 3</h2>
+
+<p>我们重新研究 <code>int 3</code>，根据英特尔手册：</p>
+
+<blockquote>
+<p>这种单字节形式很有价值，因为它可用于用断点替换任何指令的第一个字节，包括其他一个字节指令，而不会覆盖其他代码</p>
+</blockquote>
+
+<p><code>x86</code> 上的 <code>int</code> 指令占用两个字节 ——  <code>0xcd</code> 加上后面的中断号。 <code>int 3</code> 可以编码为 <code>cd 03</code>，但是为它保留了一个特殊的单字节指令 —— <code>0xcc</code>。</p>
+
+<p>为什么这样？因为这允许我们插入断点而不会覆盖多个指令。这很重要。考虑以下示例代码：</p>
+
+<pre><code>...
+    jz    foo
+    dec   eax
+foo:
+    call  bar
+...
+</code></pre>
+
+<p>假设我们想在 <code>dec eax</code>上放置一个断点。这恰好是单字节指令（操作码为<code>0x48</code>）。如果替换断点指令超过1个字节，我们将被强制覆盖下一个指令（<code>call</code>）的一部分，这会使其乱码并可能产生完全无效的东西。<code>jz foo</code>将会触发跳转，进程不会再 <code>dec eax</code> 处停止，CPU将直接执行后面的无效指令。</p>
+
+<p>对 <code>int 3</code> 进行特殊的1字节编码可以解决这个问题。由于1字节是指令可以在<code>x86</code>上运行的最短字节，因此我们保证只有想要中断的指令才会被更改。</p>
+
+<h2 id="细节封装">细节封装</h2>
+
+<p>我们将代码示例中的许多低级细节封装成API。我已经对一个名为<code>debuglib</code>的小实用程序库进行了一些封装 - 它的代码可以在本文末尾下载。在这里，我只是想展示一下它的用法示例。我们将跟踪用C语言程序，程序的源代码如下：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+
+void do_stuff()
+{
+    printf(&quot;Hello, &quot;);
+}
+
+int main()
+{
+    for (int i = 0; i &lt; 4; ++i)
+        do_stuff();
+    printf(&quot;world!\n&quot;);
+    return 0;
+}
+</code></pre>
+
+<p>假设我想在<code>do_stuff</code>的入口处放置一个断点。我将使用<code>objdump</code>来反汇编可执行文件，查看<code>do_stuff</code>的相关内容：</p>
+
+<pre><code>080483e4 &lt;do_stuff&gt;:
+ 80483e4:     55                      push   %ebp
+ 80483e5:     89 e5                   mov    %esp,%ebp
+ 80483e7:     83 ec 18                sub    $0x18,%esp
+ 80483ea:     c7 04 24 f0 84 04 08    movl   $0x80484f0,(%esp)
+ 80483f1:     e8 22 ff ff ff          call   8048318 &lt;puts@plt&gt;
+ 80483f6:     c9                      leave
+ 80483f7:     c3                      ret
+</code></pre>
+
+<p>我们将断点放在<code>0x080483e4</code>，这是<code>do_stuff</code>的第一条指令的地址。此外，由于在循环中调用此函数，我们希望在循环结束之前一直停留在断点处。我们将使用<code>debuglib</code>库来实现这一点。以下是完整的调试器功能：</p>
+
+<pre><code class="language-c">void run_debugger(pid_t child_pid)
+{
+    procmsg(&quot;debugger started\n&quot;);
+
+    /* Wait for child to stop on its first instruction */
+    wait(0);
+    procmsg(&quot;child now at EIP = 0x%08x\n&quot;, get_child_eip(child_pid));
+
+    /* Create breakpoint and run to it*/
+    debug_breakpoint* bp = create_breakpoint(child_pid, (void*)0x080483e4);
+    procmsg(&quot;breakpoint created\n&quot;);
+    ptrace(PTRACE_CONT, child_pid, 0, 0);
+    wait(0);
+
+    /* Loop as long as the child didn't exit */
+    while (1) {
+        /* The child is stopped at a breakpoint here. Resume its
+        ** execution until it either exits or hits the
+        ** breakpoint again.
+        */
+        procmsg(&quot;child stopped at breakpoint. EIP = 0x%08X\n&quot;, get_child_eip(child_pid));
+        procmsg(&quot;resuming\n&quot;);
+        int rc = resume_from_breakpoint(child_pid, bp);
+
+        if (rc == 0) {
+            procmsg(&quot;child exited\n&quot;);
+            break;
+        }
+        else if (rc == 1) {
+            continue;
+        }
+        else {
+            procmsg(&quot;unexpected: %d\n&quot;, rc);
+            break;
+        }
+    }
+
+
+    cleanup_breakpoint(bp);
+}
+</code></pre>
+
+<p>通过使用<code>create_breakpoint</code>，<code>resume_from_breakpoint</code>和<code>cleanup_breakpoint</code>，我们可以不必直接修改<code>EIP</code>和进程的内存空间。在跟踪上面显示的简单C代码时，让我们看看它打印的是什么：</p>
+
+<pre><code>$ bp_use_lib traced_c_loop
+[13363] debugger started
+[13364] target started. will run 'traced_c_loop'
+[13363] child now at EIP = 0x00a37850
+[13363] breakpoint created
+[13363] child stopped at breakpoint. EIP = 0x080483E5
+[13363] resuming
+Hello,
+[13363] child stopped at breakpoint. EIP = 0x080483E5
+[13363] resuming
+Hello,
+[13363] child stopped at breakpoint. EIP = 0x080483E5
+[13363] resuming
+Hello,
+[13363] child stopped at breakpoint. EIP = 0x080483E5
+[13363] resuming
+Hello,
+world!
+[13363] child exited
+</code></pre>
+
+<h2 id="完整代码">完整代码</h2>
+
+<p><a href="https://github.com/eliben/code-for-blog/tree/master/2011/debuggers_part2_code">链接</a> 是此部分的完整源代码文件，具体包含以下内容：</p>
+
+<ul>
+<li><code>debuglib.h</code>和<code>debuglib.c</code>  —— 用于封装调试器的一些内部工作的简单库</li>
+<li><code>bp_manual.c</code>  - 本文首先介绍的设置断点的“手动”方式。使用<code>debuglib</code>库获取一些样板代码。</li>
+<li><code>bp_use_lib.c</code>  - 对其大多数代码使用<code>debuglib</code>，如在C程序中跟踪循环的第二个代码示例中所示。</li>
+</ul>
+
+<h2 id="总结">总结</h2>
+
+<p>我们已经介绍了如何在调试器中实现断点。虽然操作系统之间的实现细节不同，但是当你使用<code>x86</code>构架时，它基本上都是同一主题的变体 —— 用<code>int 3</code>代替我们希望停止的指令。</p>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/gdb_basic/">调试器工作原理：第一部分 基础</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/thread/">线程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B">进程</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80">C语言</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_breakpoint/" title="调试器工作原理：第二部分 断点">调试器工作原理：第二部分 断点</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_basic/" title="调试器工作原理：第一部分 基础">调试器工作原理：第一部分 基础</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/os_compiler_map/" title="操作系统 &amp; 编译原理 学习攻略">操作系统 &amp; 编译原理 学习攻略</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/python_performance/" title="Python代码性能优化方法总结">Python代码性能优化方法总结</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/arsenal/" title="Arsenal（长期更新）">Arsenal（长期更新）</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/bitwise/" title="Leetcode 137 —— 位操作解法">Leetcode 137 —— 位操作解法</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/thread/" title="线程简介">线程简介</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/c_to_python/" title="将C程序封装成python库">将C程序封装成python库</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/python_to_c/" title="Python如何调用C程序">Python如何调用C程序</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/porcess/" title="进程简介">进程简介</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/python/">python(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统(5)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(4)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9D%82%E8%AE%B0/">杂记(2)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/leetcode/">leetcode</a>
+    
+    <a href="https://Hanfeng.ink/tags/linux/">linux</a>
+    
+    <a href="https://Hanfeng.ink/tags/python/">python</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C/">位操作</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2/">历史</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%96%87%E5%AD%A6/">文学</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E7%A8%8B/">线程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">编译原理</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B/">进程</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>

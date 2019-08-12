@@ -7,20 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Leetcode 137 —— 位操作解法 | 寒枫的博客</title>
-    <meta property="og:title" content="Leetcode 137 —— 位操作解法 - 寒枫的博客">
+    <title>操作系统 &amp; 编译原理 学习攻略 | 寒枫的博客</title>
+    <meta property="og:title" content="操作系统 &amp; 编译原理 学习攻略 - 寒枫的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content="2019-04-20T00:00:00&#43;08:00">
+    <meta property="article:published_time" content="2019-08-02T00:00:00&#43;08:00">
         
         
-    <meta property="article:modified_time" content="2019-04-20T00:00:00&#43;08:00">
+    <meta property="article:modified_time" content="2019-08-02T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
-    <meta name="description" content="Leetcode 137 —— 位操作解法">
+    <meta name="description" content="操作系统 &amp; 编译原理 学习攻略">
         <meta name="author" content="Hanfeng Zhang">
         
-    <meta property="og:url" content="https://Hanfeng.ink/post/bitwise/">
+    <meta property="og:url" content="https://Hanfeng.ink/post/os_compiler_map/">
     <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
@@ -78,16 +78,16 @@
                 <div class="res-cons">
                     <article class="post">
                         <header>
-                            <h1 class="post-title">Leetcode 137 —— 位操作解法</h1>
+                            <h1 class="post-title">操作系统 &amp; 编译原理 学习攻略</h1>
                         </header>
                         <date class="post-meta meta-date">
-                            2019年4月20日
+                            2019年8月2日
                         </date>
                         
                         <div class="post-meta">
                             <span>|</span>
                             
-                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95">数据结构和算法</a></span>
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F">操作系统</a></span>
                             
                         </div>
                         
@@ -97,119 +97,78 @@
                         </div>
                         
                         <div class="post-content">
-                            <p>本文讨论了leetcode 137——signle number，的通用解题方法。主要参考了该题<a href="https://leetcode.com/problems/single-number-ii/discuss/43295/Detailed-explanation-and-generalization-of-the-bitwise-operation-method-for-single-numbers">讨论区的回答</a>，英文较好的同学建议阅读原文。</p>
+                            <p>本文简单总结了操作系统和编译系统的优秀学习资源和学习顺序。<strong>PS：所有加 * 的内容都整体较难，可以选择性的阅读</strong></p>
 
-<h2 id="问题">问题</h2>
+<h2 id="推荐前置学习内容">推荐前置学习内容</h2>
 
-<p><a href="https://leetcode.com/problems/single-number-ii/">Leetcode 137. Single Number II</a>的问题描述如下：</p>
+<ol>
+<li><p>C语言，推荐<a href="http://akaedu.github.io/book/index.html">Linux C编程一站式学习</a></p></li>
 
-<p>已知有一个非空的数列，数列中的元素，除了一个只出现1次，其他元素均出现3次，找出那个只出现一次的元素。</p>
+<li><p>*<a href="https://book.douban.com/subject/26912767/">深入理解计算机系统</a>，神书不解释</p></li>
+</ol>
 
-<p><strong>举例：</strong>
-Input: [2,2,3,2]
-Output: 3</p>
+<h2 id="操作系统篇">操作系统篇</h2>
 
-<p>如果不考虑空间复杂度，问题就很简单：我们只需要遍历所有的元素，用一个哈希表记录所有元素出现的次数，输出出现次数为1的元素，但这种方法的空间复杂度为 $O(n)$。这道题有趣的地方在于，可以使用空间复杂度为 $O(1)$ 的方法解决，即不管输入的数组有多长，只需要恒定数量的额外空间，就可以解决该问题。</p>
+<h3 id="计算机体系结构">计算机体系结构</h3>
 
-<h2 id="简单方法">简单方法</h2>
+<ol>
+<li><p><a href="https://www.bilibili.com/video/av21376839">计算机速成课</a> P1 ~ P9 用通俗易懂的语言介绍了计算机底层硬件的工作原理</p></li>
 
-<p>解决这个问题的分析思路是：我们要想一种优雅的方法，<strong>使重复3次的数字相互抵消</strong>，最后剩下只出现一次的数字。这里面的难点有两个：</p>
+<li><p><a href="https://www.nand2tetris.org/">Nand2Tetris</a> Project1 ~ Project6 <a href="https://www.bilibili.com/video/av16778784">相关视频</a>，课程设计了硬件模拟器，可以让我们设计一个简单的CPU，了解计算机底层硬件的实际工作原理。课程前六章的作业较为简单，对初学者很友好</p></li>
 
-<ul>
-<li>我们必须保证重复数字的抵消操作和数字出现的顺序无关，即不论数字以何种顺序出现，最终抵消的结果应该一致。</li>
-<li>如何使用恒定空间保存所有的数字信息。</li>
-</ul>
+<li><p>*<a href="https://book.douban.com/subject/20452387/">计算机体系结构</a> 这是计算机体系结构的教材，讲的很全很深，不适合初学者</p></li>
+</ol>
 
-<p>一个简答的方法是，将所有的数字转化为2进制的表达。接着我们建立一个32位的数组<code>count</code>，<code>count</code>数组的第i个元素记录了所有2进制数字在第i位为1的次数总和。举个简单的例子：</p>
+<h3 id="操作系统">操作系统</h3>
 
-<p>假如数组为[2, 2, 2, 1]那么将数组转化为二进制即为[10, 10, 10, 1]。我们遍历数组，记录数组每一位的总和，得到：<code>count[0] = 1, count[1] = 3</code>。这里我们不难发现，如果把只重复一次的数字从原始数组中去掉，那么<code>count</code>数组中每个元素都必然可以被3整除。因此只需要求<code>count</code>数组中所有元素除以3的余数，就实现了对于重复3次数字的相互抵消。</p>
+<ol>
+<li><p><a href="https://book.douban.com/subject/33463930/">操作系统导论</a>，结构清晰，内容通俗易懂的操作系统入门书籍，官网上可找到相应的<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/Homework/homework.html">作业</a>代码（提供的python代码是python2的），对于一些不清楚的内核接口，可以查阅<a href="https://book.douban.com/subject/25900403/">UNIX环境高级编程</a>，配合使用，威力无穷。</p></li>
 
-<p>具体代码如下：</p>
+<li><p>*当你来到这里的时候，简单的理论无法满足你的需求，要想再进一步，就需要看真正的操作系统代码，Linux 0.12版的代码就是很好的学习素材。哈工大的 <a href="https://www.bilibili.com/video/av51437944?from=search&amp;seid=13045017001094310232">操作系统</a> 课程，配合 <a href="http://www.oldlinux.org/download/CLK-5.0-WithCover.pdf">linux内核完全注释</a>，让你明白花儿为什么这样红。</p></li>
 
-<pre><code class="language-python">class Solution:
-    def singleNumber(self, nums: List[int]) -&gt; int:
-        ans = 0
-        for i in range(32):
-            count = 0
-            # count 1 bit on ith  
-            for num in nums:
-                if (num &gt;&gt; i) &amp; 1:
-                    count += 1
-            
-            ans |= (count % 3) &lt;&lt; i
-        
-        # if ans &gt; 2**31, it must be a negative number
-        return ans if ans &lt; 2**31 else ans - 2**32
-</code></pre>
+<li><p>**Linux 0.12的代码虽然基本功能较为完善，但距离真实使用的操作系统仍有不小的差距，这时候就需要 <a href="https://book.douban.com/subject/1231584/">Linux内核源代码情景分析</a> 帮你理解一下 Linux 2.40 版本的源代码（注：零基础不要直接刷大BOSS，会被一招秒。。。）</p></li>
+</ol>
 
-<p>该方法可以从重复3次扩展到重复n次，处理思路相同。</p>
+<h2 id="编译原理篇">编译原理篇</h2>
 
-<h2 id="位操作方法">位操作方法</h2>
+<h3 id="热身">热身</h3>
 
-<p>上面的方法已经能够很好的解决这个问题，但我们还可以使用简单的位操作进一步优化，使算法更加简洁优雅。</p>
+<ol>
+<li><p>UC Berkeley <a href="http://inst.eecs.berkeley.edu/~cs61a/fa18/">CS 61A</a> 的编程入门神课，前半部分讲 python，后半部分会用python 实现一个简单的 Lisp 语言解释器</p></li>
 
-<p>我们先考虑一种简单的情况，即数列中的元素都重复两次，只有一个重复一次，找出重复一次的元素，代码如下：</p>
+<li><p>*<a href="https://www.nand2tetris.org/">Nand2Tetris</a> Project7 ~ Project11，相关视频需要翻墙去youtube上找，这几个项目相对之前难度明显上升，会用一条简单的汇编来实现一个类 Java 语言</p></li>
 
-<pre><code class="language-python">class Solution:
-    def singleNumber(self, nums: List[int]) -&gt; int:
-        ans = 0
-        for num in nums:
-            ans ^= num
-        
-        return ans
-</code></pre>
+<li><p>*<a href="https://book.douban.com/subject/1148282/">计算机程序的构造和解释</a>，神书中的神书，使用Lisp写一个Lisp解释器，实现<strong>自举</strong></p></li>
+</ol>
 
-<p>方法及其简单，只需要对每个数依次进行<code>XOR</code>操作，即可获得最终的答案。在这里我们利用的异或的几个重要特性：</p>
+<h3 id="正题">正题</h3>
+
+<ol>
+<li><p>*在完成了以上内容之后，相信你已经对编译原理有了大致的系统认知，接下来就是具体内容的深入学习，前端可以看大名鼎鼎的龙书 <a href="https://book.douban.com/subject/3296317/">编译原理</a>，后端可以看 <a href="https://book.douban.com/subject/20436488/">编译器设计</a></p></li>
+
+<li><p>*如果觉得单单看书太过枯燥无味，可以看一些github上大神的项目</p>
 
 <ul>
-<li>改变异或操作的顺序并不影响结果，即 A <code>XOR</code> B XOR C =  B <code>XOR</code> C <code>XOR</code> A</li>
-<li>A <code>XOR</code> 0 = A</li>
-<li>A <code>XOR</code> A = 0</li>
-</ul>
+<li><a href="https://github.com/sheisc/ucc162.3">UCC</a> 用C语言实现的C语言编译器，实现<strong>自举</strong></li>
+<li><a href="https://github.com/aalhour/awesome-compilers">awesome-compilers</a> compiler资源大集结</li>
+</ul></li>
+</ol>
 
-<p>由于相同的数进行异或会变为0，导致所有重复两次的数全部抵消为0，最终只剩下出现一次的数。</p>
-
-<p>当所有元素重复3次时，简单的异或显然无法得到最终的解，我们需要在之前思路的基础上，进行简单的构造，具体代码如下：</p>
-
-<pre><code class="language-python">class Solution:
-    def singleNumber(self, nums: List[int]) -&gt; int:
-        one = two = 0
-        for num in nums:
-            one = (one ^ num) &amp; ~two
-            two = (two ^ num) &amp; ~one
-        
-        return one
-</code></pre>
-
-<p>虽然位操作的运算看起来比较复杂，但是核心的思路很简单：</p>
+<h2 id="其他资源整理">其他资源整理</h2>
 
 <ul>
-<li><code>one</code>中保存了所有出现一次的数的异或结果</li>
-<li><code>two</code>中保存了所有出现二次的数的异或结果</li>
+<li><p><a href="http://inst.eecs.berkeley.edu/~cs162/fa15/">CS162: Operating Systems and Systems Programming</a></p></li>
+
+<li><p><a href="http://faculty.salina.k-state.edu/tim/ossg/index.html">Operating Systems Study Guide</a></p></li>
+
+<li><p><a href="https://nju-projectn.github.io/ics-pa-gitbook/ics2018/">南京大学 计算机系统基础 课程实验</a></p></li>
+
+<li><p><a href="https://xiongyingfei.github.io/DPPL/2015/main.htm">北京大学 编程语言的设计原理</a></p></li>
+
+<li><p><a href="https://samypesse.gitbook.io/how-to-create-an-operating-system/">how to create an operating system</a></p></li>
+
+<li><p><a href="https://github.com/0xAX/linux-insides">linux-insides</a></p></li>
 </ul>
-
-<p>举个简单的例子，假设数字5连续出现3次：</p>
-
-<p>第一次、<code>one</code> = 5, <code>two</code> = 0</p>
-
-<p>第二次、<code>one</code> = 0, <code>two</code> = 5</p>
-
-<p>第三次、<code>one</code> = 0, <code>two</code> = 0</p>
-
-<h3 id="构造的原理">构造的原理</h3>
-
-<p>首先我们需要回答一个问题：为什么当元素重复2次时，我们只需要构造一个数，而元素重复3次时，我们需要构造两个数？</p>
-
-<p>虽然我们只需要输出出现一次的元素，但在整个遍历过程中，需要保存所有的中间状态信息。虽然遍历结束时，仅有2种状态（出现一次、出现三次），但在遍历的过程中，其实存在三种状态（出现一次、出现两次、出现三次），所以必须构造第二个数，如果仅仅用一个数保存所有的状态会导致信息的丢失。以此类推，如果元素重复了 n 次，我们需要构造 n - 1 个数。</p>
-
-<p>现在进一步解释位操作表达式，其过程如下：</p>
-
-<ul>
-<li>当接收一个新的数字时，我们先对其进行<code>XOR</code>的操作</li>
-<li>假如该数字出现的次数与我们构造的情形不符，则清除上一步操作</li>
-</ul>
-
-<p>举个简单的例子，当5第三次出现时，<code>one</code>会先做一个<code>XOR</code>操作，将5的信息保留下来，然后发现5是第三次出现，必须撤销上一步的<code>XOR</code>操作。<code>XOR</code>操作的逻辑是在字节为0的位不变，为1的位取反；因为该数的信息保存在<code>two</code>中，我们只需要做<code>&amp; ~two</code>，就可以达到撤销之前操作的目的。</p>
                         </div>
 
                         
@@ -218,15 +177,15 @@ Output: 3</p>
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
+        <li><a href="https://Hanfeng.ink/post/python_performance/">Python代码性能优化方法总结</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/python_to_c/">Python如何调用C程序</a></li>
+        <li><a href="https://Hanfeng.ink/post/arsenal/">Arsenal（长期更新）</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/amortized_analysis/">动态表扩张和收缩的摊还分析</a></li>
+        <li><a href="https://Hanfeng.ink/post/bitwise/">Leetcode 137 —— 位操作解法</a></li>
         
         <li><a href="https://Hanfeng.ink/post/thread/">线程简介</a></li>
         
-        <li><a href="https://Hanfeng.ink/post/porcess/">进程简介</a></li>
+        <li><a href="https://Hanfeng.ink/post/c_to_python/">将C程序封装成python库</a></li>
         
     </ul>
 </div>
@@ -236,11 +195,9 @@ Output: 3</p>
                             
                             <ul class="clearfix">
                                 
-                                <li><a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C">位操作</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F">操作系统</a></li>
                                 
-                                <li><a href="https://Hanfeng.ink/tags/python">python</a></li>
-                                
-                                <li><a href="https://Hanfeng.ink/tags/leetcode">Leetcode</a></li>
+                                <li><a href="https://Hanfeng.ink/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86">编译原理</a></li>
                                 
                             </ul>
                             

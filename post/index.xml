@@ -7,10 +7,37 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Sat, 29 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 12 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>调试器工作原理：第二部分 断点</title>
+      <link>https://Hanfeng.ink/post/gdb_breakpoint/</link>
+      <pubDate>Mon, 12 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/gdb_breakpoint/</guid>
+      <description>&lt;p&gt;本文是英文博客 &lt;a href=&#34;https://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints&#34;&gt;How debuggers work: Part 2 - Breakpoints&lt;/a&gt; 的中文翻译，这是关于调试器如何工作的系列文章的第二部分。请务必在此之前阅读第一部分。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>调试器工作原理：第一部分 基础</title>
+      <link>https://Hanfeng.ink/post/gdb_basic/</link>
+      <pubDate>Sat, 10 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/gdb_basic/</guid>
+      <description>&lt;p&gt;本文是英文博客 &lt;a href=&#34;https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1&#34;&gt;How debuggers work: Part 1 - Basics&lt;/a&gt; 的中文翻译，介绍了gdb的核心调用 &lt;code&gt;ptrace&lt;/code&gt;。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>操作系统 &amp; 编译原理 学习攻略</title>
+      <link>https://Hanfeng.ink/post/os_compiler_map/</link>
+      <pubDate>Fri, 02 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/os_compiler_map/</guid>
+      <description>&lt;p&gt;本文简单总结了操作系统和编译系统的优秀学习资源和学习顺序。&lt;strong&gt;PS：所有加 * 的内容都整体较难，可以选择性的阅读&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Python代码性能优化方法总结</title>
