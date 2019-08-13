@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Mon, 12 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 13 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>调试器工作原理：第三部分 调试信息</title>
+      <link>https://Hanfeng.ink/post/gdb_debug_info/</link>
+      <pubDate>Tue, 13 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/gdb_debug_info/</guid>
+      <description>&lt;p&gt;本文是英文博客 &lt;a href=&#34;https://eli.thegreenplace.net/2011/02/07/how-debuggers-work-part-3-debugging-information&#34;&gt;How debuggers work: Part 3 - Debugging information&lt;/a&gt; 的中文翻译，这是关于调试器如何工作的系列文章的第三部分。请务必在此之前阅读第一部分和第二部分。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>调试器工作原理：第二部分 断点</title>
