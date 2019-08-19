@@ -342,45 +342,117 @@ For 64 bit systems:
 
 <p>假设我们有一个多线程的程序（4线程 - 主线程 + 3个用户线程），在一个单核 32 位系统上运行。这里线程数量 &gt; 2 * 核心数量。因此，<code>glibc malloc</code> 认定 <code>Multiple Arena</code> 被所有可用进程共享。但它是怎样共享的呢？</p>
 
-<p>当主线程，第一次调用 <code>malloc</code> 时，在没有任何竞争的情况下，已经创建了 <a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L1740">main arena</a>。</p>
+<ul>
+<li>当主线程第一次调用 <code>malloc</code> 时，glibc malloc 会直接为它分配一个 <a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L1740">main arena</a>，不需要任何的附加条件</li>
+<li>当用户线程1和用户线程2第一次调用 <code>malloc</code> 时，会为这些线程<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L870">创建一个新的 arena</a> 。此时，各个线程与<code>arena</code>是一一对应的。</li>
+<li>当户线程3第一次调用 <code>malloc</code> 时， 此时 <code>glibc malloc</code> 能维持的 <code>arena</code> 数量已到达上限，因此尝试<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L875">重用</a> 现存的 <code>arena</code> （<code>main arena</code> 、<code>arena 1</code> 或<code>arena 2</code>）。
 
-<p>当<code>thread 1</code> 和 <code>thread 2</code>第一次调用 <code>malloc</code> 时，会为这些线程<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L870">创建一个新的 arena</a> 并且是在无任何竞争的情况下被使用。直到所有线程和 <code>arena</code> 有一对一映射时。</p>
+<ul>
+<li><a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L810">遍历了所有</a>可用的 <code>arena</code>，<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L805">尽量去</a>锁定可用的 <code>arena</code>。</li>
+<li>如果锁定成功（我们假设说 <code>main arena</code> 被锁定成功），就向用户<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L826">返回</a>该 <code>arena</code>。</li>
+<li>如果没有 <code>arena</code> 是空闲的，那么就将线程3的<code>malloc</code>操作 <a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L819">阻塞</a>，直到有可用的arena为止。。</li>
+</ul></li>
+<li>现在当用户线程3第二次调用 <code>malloc</code> 时，<code>malloc</code> 会<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L2884">尽量使用上次访问的 arena</a> （<code>main arena</code>）。如果 <code>main arena</code> 是空闲的， 用户线程3会一直使用该 <code>arena</code> 并屏蔽其他线程的申请直到 <code>main arena</code> 被释放。<code>main arena</code> 就是这样在主线程和用户线程3间共享。</li>
+</ul>
 
-<p>当 <code>thread 3</code> 第一次调用 <code>malloc</code> 时， <code>arena</code> 限制的数量被<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L847">算出</a>。这里超过了 <code>arena</code> 数量的限制，因此尝试<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L875">重用</a> 现存的 <code>arena</code> （<code>main arena</code> 、<code>arena 1</code> 或<code>arena 2</code>）。</p>
-
-<p><a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L810">一旦遍历了所有</a>可用的 <code>arena</code>，就会<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L805">尽量去</a>锁定可用的 <code>arena</code>。</p>
-
-<p>如果锁定成功（我们假设说 <code>main arena</code> 被锁定成功），就向用户<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L826">返回</a>该 <code>arena</code>。</p>
-
-<p>如果没有 <code>arena</code> 是空闲的，请看接下来的 <a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/arena.c#L819">arena</a> 代码区。</p>
-
-<p>现在当 <code>thread 3</code> 第二次调用 <code>malloc</code> 时，<code>malloc</code> 会<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L2884">尽量使用上次访问的 arena</a> （<code>main arena</code>）。如果 <code>main arena</code> 是空闲的， <code>thread 3</code> 会一直使用该 <code>arena</code> 并屏蔽其他线程的申请直到 <code>main arena</code> 被释放。<code>main arena</code> 就是如此这般在主线程和 <code>thread 3</code> 间共享。</p>
-
-<h2 id="堆">堆</h2>
+<h2 id="堆结构">堆结构</h2>
 
 <p>在 <code>glibc malloc</code> 源代码里主要发现以下三种数据结构：</p>
 
 <ul>
-<li><code>heap_info</code> — <code>heap header</code> — 单个 <code>thread arena</code> 有多个堆。每个堆有它自己的头。为什么需要多个堆？每个 <code>thread arena</code> 开始都只有一个堆，但当这个堆耗尽空间时，新的堆（并不连续的）能 <code>mmap</code> 到这个 <code>arena</code> 里。</li>
-<li><code>malloc_state</code> — <code>Arena header</code> — 单个 <code>thread arena</code> 有多个堆，但是对于所有这些堆来说，只存在一个 <code>arena header</code>。</li>
-<li><code>malloc_chunk</code> — <code>chunk header</code> — 一个堆基于用户请求被分为很多块。每个块有它自己的 <code>chunk header</code>。</li>
+<li><code>heap_info</code> —即 <code>heap header</code>，因为一个<code>thread arena</code>(注意：不包含<code>main thread</code>) 可以包含多个heaps，所以为了便于管理，就给每个heap分配一个<code>heap header</code>。那么在什么情况下一个 <code>thread arena</code> 会包含多个heaps呢。在当前heap不够用的时候，<code>malloc</code> 会通过系统调用<code>mmap</code> 申请新的堆空间，新的堆空间会被添加到当前<code>thread arena</code> 中，便于管理。</li>
 </ul>
+
+<pre><code class="language-C">typedef struct _heap_info
+{
+  	mstate ar_ptr; /* Arena for this heap. */
+  	struct _heap_info *prev; /* Previous heap. */
+  	size_t size;   /* Current size in bytes. */
+  	size_t mprotect_size; /* Size in bytes that has been mprotected
+                             PROT_READ|PROT_WRITE.  */
+  	/* Make sure the following data is properly aligned, particularly
+       that sizeof (heap_info) + 2 * SIZE_SZ is a multiple of
+       MALLOC_ALIGNMENT. */
+  	char pad[-6 * SIZE_SZ &amp; MALLOC_ALIGN_MASK];
+} heap_info;
+</code></pre>
+
+<ul>
+<li><code>malloc_state</code> — 即<code>Arena Header</code>，每个线程只含有一个<code>Arena Header</code>。<code>Area Header</code> 包含bins信息，top chunk 以及 last remainder chunk 等。</li>
+</ul>
+
+<pre><code class="language-C">struct malloc_state
+{
+  	/* Serialize access.  */
+  	mutex_t mutex;
+ 
+  	/* Flags (formerly in max_fast).  */
+  	int flags;
+ 
+  	/* Fastbins */
+  	mfastbinptr fastbinsY[NFASTBINS];
+ 
+  	/* Base of the topmost chunk -- not otherwise kept in a bin */
+  	mchunkptr top;
+ 
+  	/* The remainder from the most recent split of a small request */
+  	mchunkptr last_remainder;
+ 
+  	/* Normal bins packed as described above */
+  	mchunkptr bins[NBINS * 2 - 2];
+ 
+  	/* Bitmap of bins */
+  	unsigned int binmap[BINMAPSIZE];
+ 
+  	/* Linked list */
+  	struct malloc_state *next;
+ 
+  	/* Linked list for free arenas.  */
+  	struct malloc_state *next_free;
+ 
+  	/* Memory allocated from the system in this arena.  */
+  	INTERNAL_SIZE_T system_mem;
+  	INTERNAL_SIZE_T max_system_mem;
+};
+</code></pre>
+
+<ul>
+<li><code>malloc_chunk</code> — 即<code>chunk header</code>。一个 header 被分为多个 chunk，至于每个chunk 的大小，由用户的请求决定，也就是说用户调用<code>malloc(size)</code>传递的<code>size</code>参数”就是”chunk的大小（这里给“就是”加上引号，说明这种表示并不正确，但是为了方便立即就暂时这么描述了）。每个chunk都由一个结构体<code>malloc_chunk</code>表示。</li>
+</ul>
+
+<pre><code class="language-C">
+struct malloc_chunk {
+  	/* #define INTERNAL_SIZE_T size_t */
+  	INTERNAL_SIZE_T      prev_size;  /* Size of previous chunk (if free).  */
+  	INTERNAL_SIZE_T      size;       /* Size in bytes, including overhead. */
+  	struct malloc_chunk* fd;         /* double links -- used only if free. 这两个指针只在free chunk中存在*/
+  	struct malloc_chunk* bk;
+ 
+  	/* Only used for large blocks: pointer to next larger size.  */
+  	struct malloc_chunk* fd_nextsize; /* double links -- used only if free. */
+  	struct malloc_chunk* bk_nextsize;
+};
+</code></pre>
 
 <p>注意：</p>
 
 <ul>
-<li><p><code>Main arena</code> 没有多重堆，因此没有 <code>heap_info</code> 结构。当 <code>main arena</code> 耗尽空间时，<code>sbrk</code> 堆被扩展（连续区域）直到它转储到内存映射分段中。</p></li>
+<li><p><code>Main arena</code> 没有多重堆，因此没有 <code>heap_info</code> 结构体。当 <code>main arena</code> 耗尽空间时，就通过扩展<code>sbrk</code> 的heap segment来获取更多的空间，直到它碰到内存mapping区域为止。</p></li>
 
-<li><p>不像 <code>thread arena</code>，<code>main arena</code> 的 <code>Arena header</code> 不是 <code>sbrk</code> 堆分段的一部分。它是一个<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L1740">全局变量</a>，因此可以在 <code>libc</code> 里找到它以及数据分段。</p></li>
+<li><p>不同于 <code>thread arena</code>，<code>main arena</code> 的 <code>Arena header</code> 不是 <code>sbrk sbrk heap segment</code> 堆分段的一部分。它是一个<a href="https://github.com/sploitfun/lsploits/blob/master/glibc/malloc/malloc.c#L1740">全局变量</a>，因此它属于 lib.so 的 data segment。</p></li>
 </ul>
 
-<p>下图是<code>main arena</code> 和 <code>thread arena</code>的结构分布图：</p>
+<p>首先，通过内存分布图解释清<code>malloc_state</code> 与 <code>heap_info</code> 之间的组织关系。</p>
+
+<p>下面是只有一个 heap segment 的 <code>main arena</code> 和 <code>thread arena</code> 的内存分布图：：</p>
 
 <p><img src="https://Hanfeng.ink/image/understand_glibc_malloc/main_arena.png" alt="main_arena" /></p>
 
-<p>下图是 <code>thread arena</code> 的结构分布图：</p>
+<p>下面是一个<code>thread arena</code>中含有多个 heap segments 的情况：</p>
 
 <p><img src="https://Hanfeng.ink/image/understand_glibc_malloc/thread_arena.png" alt="thread_arena" /></p>
+
+<p>上图可以看出，<code>thread arena</code> 只含有一个<code>malloc_state</code>（即arena header），却有两个<code>heap_info</code>(即heap header)。由于两个 heap segment 是通过 <code>mmap</code> 分配内存，两者 heap segments 是通过<code>mmap</code> 分配的内存，两者在内存布局上并不相邻而是分属于不同的内存区间，所以为了便于管理，<code>libc malloc</code> 将第二个<code>heap_info</code> 结构体的<code>prev</code> 成员指向第一个<code>heap_info</code> 结构体的起始位置（即<code>ar_ptr</code>成员），而第一个<code>heap_info</code> 结构体的<code>ar_ptr</code> 成员指向了<code>malloc_state</code>，这样就构成一个单链表，方便以后管理。</p>
 
 <h2 id="chunk">Chunk</h2>
 
@@ -393,9 +465,17 @@ For 64 bit systems:
 <li><code>Last Remainder chunk</code> —— 最后剩余块</li>
 </ul>
 
+<p>从本质上来说，所有类型的 chunk 都是内存中一块连续的区域，只是通过该区域中特定位置的某些标识符加以区分。为了简便，我们先将这4类 chunk 简化为2类：<code>allocate chunk</code>以及<code>free chunk</code> ，前者标识已经分配给用户使用的 chunk ，后者表示未使用的 chunk。</p>
+
+<h3 id="allocated-chunk">Allocated chunk</h3>
+
+<p>任何堆内存管理器都是以chunk为单位进行堆内存管理的，而这就需要一些数据结构来标志各个块的边界，以及区分已经分配块和空闲块。大多数堆内存管理都将这些边界信息作为 chunk 的一部分嵌入到 chunk 内部，下图为 allocated chunk 的结构：</p>
+
 <p><img src="https://Hanfeng.ink/image/understand_glibc_malloc/allocated_chunk.png" alt="allocated_chunk" /></p>
 
-<p><code>size</code>：这部分包含了此处已分配的块的容量大小，最后三位包含以下信息：</p>
+<p><code>size</code>：这部分包含了此处已分配的块的容量大小。</p>
+
+<p>堆内存中要求每个chunk的大小必须为8的整数倍，因此chunk size的后3位是无效，为了充分利用内存，堆管理奖这3个bit比特位用作chunk的标志位，最后三位包含以下信息：</p>
 
 <ul>
 <li><code>PREV_INUSE(P)</code> ——如果之前的块已经被分配，该位置1</li>
@@ -406,11 +486,11 @@ For 64 bit systems:
 <p>请注意以下几点：</p>
 
 <ul>
-<li>其他 <code>malloc_chunk</code> （比如 <code>fd — forward point，bk– back point</code>）的部分不会用于分配块。因此用户信息会存储在这个区域。</li>
-<li>由于存储 <code>malloc_chunk</code> 需要一些额外的空间，用户请求的容量大小转换成了可用的大小。转化通过不设置可用容量的最后 3 bits 的方式进行，因此它用于存储关键信息。</li>
+<li>allocated chunk 没有其他 <code>malloc_chunk</code> （比如 <code>fd — forward pointer，bk – back pointer</code>）。因此这部分区域会用来存储用户信息。</li>
+<li>由于存储 <code>malloc_chunk</code> 需要一些额外的空间，用户请求的容量需要转换成实际需要的容量。转化不会改变最优 3 bits，因此它们用于存储关键信息。</li>
 </ul>
 
-<h2 id="free-chunk">Free Chunk</h2>
+<h3 id="free-chunk">Free Chunk</h3>
 
 <p><img src="https://Hanfeng.ink/image/understand_glibc_malloc/free_chunk.png" alt="free_chunk" /></p>
 
