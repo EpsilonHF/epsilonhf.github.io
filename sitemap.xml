@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://Hanfeng.ink/post/coroutine/</loc>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://Hanfeng.ink/post/understand_glibc_malloc/</loc>
     <lastmod>2019-08-19T00:00:00+00:00</lastmod>
   </url>
@@ -132,13 +137,13 @@
   
   <url>
     <loc>https://Hanfeng.ink/post/</loc>
-    <lastmod>2019-08-19T00:00:00+00:00</lastmod>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://Hanfeng.ink/tags/python/</loc>
-    <lastmod>2019-06-29T00:00:00+00:00</lastmod>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -198,7 +203,7 @@
   
   <url>
     <loc>https://Hanfeng.ink/</loc>
-    <lastmod>2019-08-19T00:00:00+00:00</lastmod>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -208,13 +213,13 @@
   
   <url>
     <loc>https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
-    <lastmod>2019-08-02T00:00:00+00:00</lastmod>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
-    <lastmod>2019-08-19T00:00:00+00:00</lastmod>
+    <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
