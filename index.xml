@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Sun, 03 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 05 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>接纳自我，拥抱生活</title>
+      <link>https://Hanfeng.ink/post/life_and_happiness/</link>
+      <pubDate>Tue, 05 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/life_and_happiness/</guid>
+      <description>&lt;p&gt;夜有所感，谨以记之。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>协程简介</title>
