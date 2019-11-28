@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Git 原理解析 | 寒枫的博客</title>
+    <meta property="og:title" content="Git 原理解析 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2019-11-27T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2019-11-27T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="Git 原理解析">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/git_core/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">业精于勤荒于嬉，行成于思毁于随</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">Git 原理解析</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2019年11月27日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86">实现原理</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>本文主要针对 Git 的内部实现原理进行解析。</p>
+
+<h2 id="1-git-基础">1. Git 基础</h2>
+
+<p>Git 是目前世界上最优秀的分布式版本控制系统。版本控制系统是能够随着时间的推进记录一系列文件的变化以便于你以后想要的退回到某个版本的系统。</p>
+
+<p>Git每一次提交都是对项目文件的一个完整拷贝，因此你可以完全恢复到以前的任一个提交而不会发生任何区别。这里有一个问题：如果我的项目大小是10M，那 Git 占用的空间是不是随着提交次数的增加线性增加呢？我提交了10次，占用空间是不是100M呢？显然不是，为了节省存储空间，Git会对每次提交的文件进行检测，如果文件没有发生变化，那么此时存储的是<strong>指向上一个版本文件的指针</strong>。</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/git_file.png" alt="" /></p>
+
+<blockquote>
+<p>Git最适合保存文本文件，事实上Git就是被设计出来就是为了保存文本文件的，像各种语言的源代码，因为Git可以对文本文件进行很好的压缩和差异分析（大家都见识过了，Git的差异分析可以精确到你添加或者删除了某个字母）。而二进制文件像视频，图片等，Git也能管理，但不能取得较好的效果（压缩比率低，不能差异分析）。实验证明，一个 500k 的文本文件经Git压缩后仅 50k 左右，稍微改变内容后两次提交，会有两个 50k 左右的文件，没错的，保存的是完整快照。而对于二进制文件，像视频，图片，压缩率非常小， Git 占用空间几乎随着提交次数线性增长。</p>
+</blockquote>
+
+<h2 id="2-git-文件管理流程">2. Git 文件管理流程</h2>
+
+<p>Git工程有三个工作区域：</p>
+
+<ul>
+<li>工作目录：当前进行工作的区域</li>
+<li>暂存区域：运行 <code>git add</code> 命令后文件保存的区域，也是下次提交将要保存的文件</li>
+<li>本地仓库：记录了你工程某次提交的完整状态和内容，这意味着你的数据永远不会丢失</li>
+</ul>
+
+<p>相应的，文件也有三种状态：</p>
+
+<ul>
+<li>已修改（modified）：已修改表示修改了某个文件，但还没有提交保存</li>
+<li>已暂存（staged）：把已修改的文件放在下次提交时要保存的清单中，即暂存区域</li>
+<li>已提交（committed）：文件已经被安全地保存在本地仓库</li>
+</ul>
+
+<p><img src="https://Hanfeng.ink/image/git_core/file_stage.jpg" alt="" /></p>
+
+<h2 id="3-git-对象">3. Git 对象</h2>
+
+<p>现在已经了解了 Git 的基本流程，接下来我们需要深入内部，具体了解 Git 的实现原理。</p>
+
+<p>Git 的核心部分是一个简单的键值对数据库。你可以向该数据库插入任意类型的文件，它会返回一个键值，通过该键值可以在任意时刻再次检索该文件。那么在此基础上，要实现 Git 的基本功能，我们需要解决以下三个问题：</p>
+
+<ul>
+<li>数据库的实现：
+
+<ul>
+<li>Git 是一个轻量级的版本控制系统，但传统的数据库普遍较重，不适合在 Git 中使用</li>
+<li>传统数据库希望存储的元组大小尽可能一致，但文件的大小是不可控的</li>
+</ul></li>
+<li>目录结构的保存：
+
+<ul>
+<li>数据库中的数据是平级的，但实际的文件目录是一个有层次的树结构，所以在保存文件信息的同时，要保存目录结构信息</li>
+</ul></li>
+<li>提交状态的保存：
+
+<ul>
+<li>当使用 Git 时，我们不需要获取所有的文件信息，只需要得到某个提交节点对应的文件信息
+
+<br /></li>
+</ul></li>
+</ul>
+
+<p>在 Git 中，分别使用<strong>文件对象(blob object)，树对象(tree object)，提交对象(commit object)</strong>，解决以上三个问题。</p>
+
+<h3 id="3-1-文件对象-blob-object">3.1 文件对象(blob object)</h3>
+
+<p>虽然上文说了，Git 的核心部分是一个简单的键值对数据库，但没必要实现一个完整的数据库，Git 巧妙的利用了 Linux 系统自带文件管理系统，满足了文件存储和查找的需求。</p>
+
+<p>Git 先将原始文件信息加上特定头部信息，再计算 <code>SHA-1</code> 校验和，作为键。之后对文件内容进行了压缩处理，作为值保存在系统中。那么 Git 是如何通过键找到值的呢？很简答，将 <code>SHA-1</code> 校验和作为压缩文件的文件名，利用文件管理系统实现键值映射。对这种关系抽象，就是文件对象。</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/blob_object.png" alt="" /></p>
+
+<p>我们可以通过实地操作看一下：</p>
+
+<p>先通过 <code>git init</code> 初始化一个本地仓库，此时目录下会多了一个隐藏目录 <code>.git</code>，其中的 <code>objects</code> 子目录存储着 Git 数据库的所有内容。</p>
+
+<pre><code>$ git init
+$ find .git/objects
+.git/objects
+.git/objects/pack
+.git/objects/info
+</code></pre>
+
+<p>接着使用 <code>git hash-object</code> 直接存储对象，并返回校验和。</p>
+
+<pre><code>$ echo 'test content' | git hash-object -w --stdin
+d670460b4b4aece5915caf5c68d12f560a9fe3e4
+</code></pre>
+
+<p>该命令输出一个长度为 40 个字符的校验和，现在我们可以查看 Git 是如何存储数据的：</p>
+
+<pre><code>$ find .git/objects -type f
+.git/objects/d6/70460b4b4aece5915caf5c68d12f560a9fe3e4
+</code></pre>
+
+<p>可以在 <code>objects</code> 目录下看到一个文件。 这就是开始时 Git 存储内容的方式——校验和的前两个字符用于命名子目录，余下的 38 个字符则用作文件名。</p>
+
+<p>可以通过 <code>cat-file</code> 命令从 Git 那里取回数据。</p>
+
+<pre><code>$ git cat-file -p d670460b4b4aece5915caf5c68d12f560a9fe3e4
+test content
+</code></pre>
+
+<h3 id="3-2-树对象-tree-object">3.2 树对象(tree object)</h3>
+
+<p>在解决了文件内容存储的问题后，我们来解决第二个问题——如何保存文件目录信息。</p>
+
+<p>Git 在解决这个问题上采用和 Linux 类似的方法。Linux 使用 <code>inode</code> 存储文件的内容信息，使用 <code>directory</code> 存储文件的层次结构信息。而 Git 使用文件对象存储文件内容信息，使用树对象存储文件的层次结构信息。树对象的内容如下：</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/tree_object.png" alt="" /></p>
+
+<p>一个单独的树对象包含一条或多条记录，每一条记录含有一个指向文件对象或子树对象的 SHA-1 指针，并附有该对象的权限模式 (mode)、类型和文件名信息等。</p>
+
+<p>以一个简单的目录为例：</p>
+
+<pre><code>$ tree
+.
+├── README
+├── Rakefile
+└── lib
+    └── simplegit.rb
+
+1 directory, 3 files
+</code></pre>
+
+<p>对应的文件对象(blob)和树对象(tree object)为：</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/tree_blob.png" alt="" /></p>
+
+<p>当你对文件进行修改并提交时，变化的文件会生成一个新的文件对象，记录文件的完整内容，然后针对该文件有一个唯一的 SHA-1 校验和。对于没有变化的文件，简单拷贝上一次版本的指针即 SHA-1 校验和，而不会生成一个全新的文件对象。</p>
+
+<h3 id="3-3-提交对象-commit-object">3.3 提交对象(commit object)</h3>
+
+<p>现在我们要面对第三个问题——如何得到特定提交节点的文件信息。</p>
+
+<p>在之前已经通过文件对象和树对象完成了对于文件内容和文件目录结构的存储。而要得到特定提交节点的文件信息，只需要记录提交时的树对象信息，通过树对象中的指针，找到对应的文件即可——这就是提交对象。</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/commit_object.png" alt="" /></p>
+
+<p>提交对象的格式很简单：指明了该时间点项目快照的顶层树对象、作者/提交者信息。可由 <code>git log</code> 查看的 Git 提交历史了：</p>
+
+<pre><code>$ git log
+commit 1a410efbd13591db07496601ebc7a059dd55cfe9
+Author: Scott Chacon &lt;schacon@gmail.com&gt;
+Date:   Fri May 22 18:15:24 2009 -0700
+
+	third commit
+
+ bak/test.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit cac0cab538b970a37ea1e769cbbde608743bc96d
+Author: Scott Chacon &lt;schacon@gmail.com&gt;
+Date:   Fri May 22 18:14:29 2009 -0700
+
+	second commit
+
+ new.txt  | 1 +
+ test.txt | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+commit fdf4fc3344e67ab068f836878b6c4951e3b15f3d
+Author: Scott Chacon &lt;schacon@gmail.com&gt;
+Date:   Fri May 22 18:09:34 2009 -0700
+
+    first commit
+
+ test.txt | 1 +
+ 1 file changed, 1 insertion(+)
+</code></pre>
+
+<p>跟踪对象的内部指针，将得到一个类似下面的对象关系图：</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/commit_tree_blob.png" alt="" /></p>
+
+<p>到这里，我们可以整体回顾一下 Git 保存文件的整体流程：</p>
+
+<ul>
+<li>计算文件的校验和</li>
+<li>如果仓库中没有储存校验和对应的文件，生成文件对象，保存文件内容</li>
+<li>用树对象记录文件的目录信息</li>
+<li>创建提交对象，保存本次提交的对应内容。</li>
+</ul>
+
+<h2 id="4-git-引用">4. Git 引用</h2>
+
+<p>由于 Git 中所有的对象都通过 40 位的 SHA-1 校验和作为指针，当我们需要查找对应的提交对象时很不方便。因此 Git 引入引用这一概念，作为 SHA-1 校验和的别名，存储在 <code>.git/refs</code> 文件夹中。</p>
+
+<p>最常见的引用也许就是 <code>master</code>了，因为这是 Git 默认创建的，它始终指向你项目主分支的最后一次提交记录。如果在项目根目录运行 <code>cat .git/refs/heads</code>，会输出一个 SHA-1 校验和，例如：</p>
+
+<pre><code>$ cat .git/refs/heads/master
+60f13032c2ff06fc60e9bcb1e17cb48bb13d45e0
+</code></pre>
+
+<p>因此 <code>master</code> 只是一个40位 SHA-1 校验和的别名罢了。</p>
+
+<p>还有一个问题，Git如何知道你当前分支的最后一次的提交ID?在 <code>.git</code> 文件夹下有一个 HEAD 文件，像这样：</p>
+
+<pre><code>$ cat .git/HEAD
+ref: refs/heads/master
+</code></pre>
+
+<p><code>HEAD</code> 文件其实并不包含 SHA-1 值，而是一个指向当前分支的引用，内容会随着切换分支而变化，内容格式像这样：<code>ref: refs/heads/&lt;branch-name&gt;</code>。当你执行 <code>git commit</code> 命令时，它就创建了一个提交对象，把这个提交对象的父级设置为 <code>HEAD</code> 指向的引用的 SHA-1 值。</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/branch.png" alt="" /></p>
+
+<h2 id="5-git-分支">5. Git 分支</h2>
+
+<p>有了以上结构的支持，在 Git 中创建分支就很容易，不需要将项目完整的拷贝一份。</p>
+
+<h3 id="5-1-创建分支">5.1 创建分支</h3>
+
+<p>上文中已经说到，Git 通过保存文件对象来实现文件内容的保存，Git 本质上只是一棵巨大的文件树，树的每一个节点就是文件对象，而分支只是树的一个分叉。说白了，分支就是一个有名字的引用，它包含一个提交对象的的40位校验和，所以创建分支就是向一个文件写入校验和。所以自然就快了，而且与项目的复杂程度无关。</p>
+
+<p>Git 的默认分支是 <code>master</code>，存储在 <code>.git\refs\heads\master</code> 文件中，假设你在 <code>master</code> 分支运行 <code>git branch dev</code> 创建了一个名字为 <code>dev</code> 的分支，Git 所做的实际操作是：</p>
+
+<ol>
+<li>在 <code>.git\refs\heads</code> 文件夹下新建一个文件名为 <code>dev</code> 的文本文件</li>
+<li>将 <code>HEAD</code> 指向的当前分支（当前为 <code>master</code>）的40位SHA-1 校验和写入 <code>dev</code> 文件</li>
+</ol>
+
+<p>创建分支就是这么简单，那么切换分支呢？更简单：</p>
+
+<ol>
+<li>修改 <code>.git</code> 文件下的 <code>HEAD</code> 文件为 <code>ref: refs/heads/&lt;分支名称&gt;</code></li>
+<li>按照分支指向的提交记录将工作区的文件恢复至一模一样。</li>
+</ol>
+
+<h3 id="5-2-合并分支">5.2 合并分支</h3>
+
+<p>如果顺着一个分支走下去可以到达另一个分支的话，那么 Git 在合并两者时，只会简单地把指针右移，因为这种单线的历史分支不存在任何需要解决的分歧，所以这种合并过程可以称为快进（Fast forward），流程如下图所示：</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/fast_forwarding.png" alt="" /></p>
+
+<p>当分支出现分叉时，就有可能出现冲突，Git 不得不进行一些额外处理——用两个分支的末端以及它们的共同祖先进行一次三方合并，并生成新的提交对象：</p>
+
+<p><img src="https://Hanfeng.ink/image/git_core/three_way_merge.png" alt="" /></p>
+
+<h2 id="6-附录">6. 附录</h2>
+
+<ul>
+<li><a href="https://git-scm.com/book/zh/v2">Git Pro</a></li>
+<li><a href="https://illustrated-git.readthedocs.io/en/latest/">index Illustrated GIT 1.0 documentation</a></li>
+<li><a href="https://lufficc.com/blog/the-core-conception-of-git">Git的核心概念</a></li>
+</ul>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/life_and_happiness/">接纳自我，拥抱生活</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/coroutine/">协程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/understand_glibc_malloc/">深入理解 malloc</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/gdb_debug_info/">调试器工作原理：第三部分 调试信息</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/gdb_breakpoint/">调试器工作原理：第二部分 断点</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/git">Git</a></li>
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90">原理解析</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/git_core/" title="Git 原理解析">Git 原理解析</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/life_and_happiness/" title="接纳自我，拥抱生活">接纳自我，拥抱生活</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/coroutine/" title="协程简介">协程简介</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/understand_glibc_malloc/" title="深入理解 malloc">深入理解 malloc</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_debug_info/" title="调试器工作原理：第三部分 调试信息">调试器工作原理：第三部分 调试信息</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_breakpoint/" title="调试器工作原理：第二部分 断点">调试器工作原理：第二部分 断点</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_basic/" title="调试器工作原理：第一部分 基础">调试器工作原理：第一部分 基础</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/os_compiler_map/" title="操作系统 &amp; 编译原理 学习攻略">操作系统 &amp; 编译原理 学习攻略</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/python_performance/" title="Python代码性能优化方法总结">Python代码性能优化方法总结</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/arsenal/" title="Arsenal">Arsenal</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/python/">python(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">实现原理(1)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统(8)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(4)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9D%82%E8%AE%B0/">杂记(3)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/git/">git</a>
+    
+    <a href="https://Hanfeng.ink/tags/leetcode/">leetcode</a>
+    
+    <a href="https://Hanfeng.ink/tags/linux/">linux</a>
+    
+    <a href="https://Hanfeng.ink/tags/python/">python</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C/">位操作</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%86%85%E5%AD%98/">内存</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2/">历史</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">原理解析</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%96%87%E5%AD%A6/">文学</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AC%94%E8%AE%B0/">笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E7%A8%8B/">线程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">编译原理</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B/">进程</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>
