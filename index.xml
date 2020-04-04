@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Wed, 27 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 03 Apr 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tinyhttpd 源码解析</title>
+      <link>https://Hanfeng.ink/post/tinyhttpd/</link>
+      <pubDate>Fri, 03 Apr 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/tinyhttpd/</guid>
+      <description>&lt;p&gt;本文具体解析了开源项目 Tinyhttpd 的源代码，具体源代码可以去 &lt;a href=&#34;https://github.com/EpsilonHF/Tinyhttpd&#34;&gt;github&lt;/a&gt; 上查看&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Git 原理解析</title>
