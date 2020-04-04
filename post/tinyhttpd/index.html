@@ -189,7 +189,7 @@ color=gray
 
 <ol>
 <li>用 <code>startup</code> 函数初始化了一个和 4000 端口绑定的套接字</li>
-<li>进入一个循环，通过 <code>accept</code> 函数不断监听该端口是否有请求</li>
+<li>进入一个循环，通过 <code>accept</code> 函数接受客户端请求</li>
 <li>如果有请求，通过 <code>pthread_create</code> 建立一个新的线程</li>
 <li>在线程中，调用 <code>accept_request</code> 函数，处理请求，实现一个多线程同步服务</li>
 </ol>
