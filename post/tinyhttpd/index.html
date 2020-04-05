@@ -279,7 +279,7 @@ struct sockaddr_in {            /* IPv4 socket address */
 
 <p>这里面主要包含了 ipv4 地址信息和端口信息。</p>
 
-<p>由于 <code>in_addr</code> 结构体中保存了以 32 为 int 格式的 ipv4 地址，我们需要调用 <code>htonl</code> 函数，将字符串格式的 ip 地址转换为整型格式的 ip 地址。其中 <code>INADDR_ANY</code> 代表了一个特殊的 ip 地址常量，表示该服务可以接收任何其他主机的请求。</p>
+<p>由于 <code>in_addr</code> 结构体中保存了以 32 为 int 格式的 ipv4 地址，我们需要调用 <code>htonl</code> 函数，将字符串格式的 ip 地址转换为整型格式的 ip 地址。其中 <code>INADDR_ANY</code> 代表了一个特殊的 ip 地址常量，此时主机的所有网络接口都可以接收请求（如果主机有多个网卡，程序会监听每个网卡对应 ip 地址的端口）。</p>
 
 <pre><code class="language-c">name.sin_addr.s_addr = htonl(INADDR_ANY);
 </code></pre>
