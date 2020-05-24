@@ -199,10 +199,10 @@ color=gray
 <pre><code class="language-c">int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 </code></pre>
 
-<p><code>accept</code> 函数接收一个套接字的文件描述符，以及 ipv4 地址结构，返回连接成功后，客户端套接字的文件描述符。该函数有两个重要的特点：</p>
+<p><code>accept</code> 函数接收一个套接字的文件描述符，以及 ipv4 地址结构，函数返回一个新的套接字，通过该套接字与客户端通信。该函数有两个重要的特点：</p>
 
 <ol>
-<li>如果没有 <code>connect</code> 请求，函数调用会被阻塞，知道接收到 <code>connect</code> 请求</li>
+<li>如果没有 <code>connect</code> 请求，函数调用会被阻塞，直到接收到 <code>connect</code> 请求</li>
 <li>在与客户端的套接字建立连接时，<code>accept</code> 函数创建一个新的套接字，并用新的套接字与客户端连接，原始的套接字依然处于打开状态，可以用于继续监听端口。</li>
 </ol>
 
@@ -863,6 +863,10 @@ httpd running on port 4000
 <ul class="widget-list">
     
     <li>
+        <a href="https://Hanfeng.ink/post/project_thinking/" title="项目开发总结">项目开发总结</a>
+    </li>
+    
+    <li>
         <a href="https://Hanfeng.ink/post/tinyhttpd/" title="Tinyhttpd 源码解析">Tinyhttpd 源码解析</a>
     </li>
     
@@ -896,10 +900,6 @@ httpd running on port 4000
     
     <li>
         <a href="https://Hanfeng.ink/post/os_compiler_map/" title="操作系统 &amp; 编译原理 学习攻略">操作系统 &amp; 编译原理 学习攻略</a>
-    </li>
-    
-    <li>
-        <a href="https://Hanfeng.ink/post/python_performance/" title="Python代码性能优化方法总结">Python代码性能优化方法总结</a>
     </li>
     
 </ul>
@@ -937,6 +937,10 @@ httpd running on port 4000
     
     <li>
         <a href="https://Hanfeng.ink/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络(1)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发(1)</a>
     </li>
     
 </ul>
@@ -999,6 +1003,8 @@ httpd running on port 4000
     <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
     
     <a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B/">进程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发</a>
     
 </div>
     </section>

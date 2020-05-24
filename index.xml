@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Fri, 03 Apr 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 23 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>项目开发总结</title>
+      <link>https://Hanfeng.ink/post/project_thinking/</link>
+      <pubDate>Sat, 23 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/project_thinking/</guid>
+      <description>&lt;p&gt;本文对在项目开发中的一些问题进行总结。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Tinyhttpd 源码解析</title>

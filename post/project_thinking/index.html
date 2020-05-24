@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>项目开发总结 | 寒枫的博客</title>
+    <meta property="og:title" content="项目开发总结 - 寒枫的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2020-05-23T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2020-05-23T00:00:00&#43;08:00">
+        
+    <meta name="Keywords" content="linux,c语言,机器学习,Hanfeng,寒枫,python,博客">
+    <meta name="description" content="项目开发总结">
+        <meta name="author" content="Hanfeng Zhang">
+        
+    <meta property="og:url" content="https://Hanfeng.ink/post/project_thinking/">
+    <link rel="shortcut icon" href="https://Hanfeng.ink/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/normalize.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/prism.css">
+    
+    <link rel="stylesheet" href="https://Hanfeng.ink/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/douban.css">
+    
+        <link rel="stylesheet" href="https://Hanfeng.ink/css/other.css">
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://Hanfeng.ink/">
+                        寒枫的博客
+                    </a>
+                
+                <p class="description">业精于勤荒于嬉，行成于思毁于随</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://Hanfeng.ink/">首页</a>
+                    
+                    <a  href="https://Hanfeng.ink/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://Hanfeng.ink/books/" title="推荐">推荐</a>
+                    
+                    <a  href="https://Hanfeng.ink/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">项目开发总结</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2020年5月23日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="https://Hanfeng.ink/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91">项目开发</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-meta">
+                            <span id="busuanzi_container_page_pv">|<span id="busuanzi_value_page_pv"></span><span> 阅读</span></span>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>本文对在项目开发中的一些问题进行总结。</p>
+
+<h2 id="1-前言">1. 前言</h2>
+
+<p>最近参与了一个大型项目的子模块功能开发，在整个开发过程中，全程跟进。与之前的项目开发相比，该项目的复杂性较高，主要体现在以下方面：</p>
+
+<ul>
+<li>数据来源多，且数据字段内容复杂，且容易引发歧义</li>
+<li>模型数量繁多，需要模块化管理</li>
+<li>模型存在被高频调用的场景，需要考虑高并发的问题</li>
+<li>由于模型数量较大，需要合理设计日志输出内容，记录程序运行状态，方便排查异常</li>
+<li>模型需要与大数据平台对接，需要考虑数据的接收和后续存储的问题</li>
+<li>功能模块较多，需要有高效的测试方法</li>
+<li>需要考虑断网情况下的自动化部署</li>
+<li>为了保证模型服务的可用性，需要进行后台的监控</li>
+<li>由于源数据的复杂性，需要对不同的数据源进行校验，并设计对应的异常处理逻辑</li>
+<li>开发时间较短，需要开发的内容较多，需要在保证代码质量的前提下，进行快速的功能开发和迭代</li>
+<li>由于前期，数据采集模块也在同步开发，导致模型开发的同时，需要和数据采集的部门进行同步，根据实际情况优化模型的输入数据格式</li>
+</ul>
+
+<p>在整体的开发流程中，我们犯了很多错误，同时也累积了很多宝贵的经验和教训，在技术和非技术方面都有明显的进步，因此写下这篇文章进行总结。</p>
+
+<h2 id="2-整体开发流程">2. 整体开发流程</h2>
+
+<p>我们先梳理一下模型模块的整体开发流程</p>
+
+<ul>
+<li>初步了解需求
+
+<ul>
+<li>经过对接，初步了解项目的大体内容和模型模块需要满足的功能</li>
+<li>了解模型和大数据的交互方式</li>
+</ul></li>
+<li>本项目模型部分使用python进行开发，框架代码的初步设计如下
+
+<ul>
+<li>使用 Flask 作为基础的框架</li>
+<li>使用 logging 模块进行日志管理</li>
+<li>将路由和模型的处理逻辑分离</li>
+<li>设计 logging 日志的输出内容</li>
+<li>从模型的处理逻辑中，抽象出模型基类</li>
+<li>规范 url 的格式</li>
+<li>统一输入数据的 json 格式</li>
+<li>确认 post 请求返回码对应的错误类型和错误内容</li>
+</ul></li>
+<li>框架的二次优化及功能开发
+
+<ul>
+<li>将路由剥离出来，作为单独的模块，并用 blueprint 进行统一管理</li>
+<li>使用 flask_testing 实现自动化的接口测试</li>
+<li>将模型中需要的参数放入配置文件中统一管理</li>
+<li>进行 code review，及时优化模型的代码逻辑</li>
+</ul></li>
+<li>数据对接及联调
+
+<ul>
+<li>根据数据源的情况，调整模型输入字段内容</li>
+<li>根据大数据的要求，在所有模型中新增字段</li>
+</ul></li>
+<li>性能优化及部署
+
+<ul>
+<li>在自动化测试模块中加入调用时间的计算，测试接口性能</li>
+<li>通过 flask_caching，将大文件放入缓存中，降低硬盘 I/O</li>
+<li>优化配置文件的数据结构，使代码的逻辑更为清晰</li>
+<li>开发离线的自动化部署脚本</li>
+<li>配置 nginx 实现多台主机的负载均衡，并用 docker compose 实现容器的自动化管理</li>
+<li>配置 gunicorn，实现 flask 的多进程管理</li>
+<li>配置 supervisor，实现进程的后台监控</li>
+</ul></li>
+</ul>
+
+<h2 id="3-技术内容总结">3. 技术内容总结</h2>
+
+<p>在整个开发的流程中，在不同的时间阶段，会遇到不同的问题，在代码整体框架的设计上，也需要有不同的侧重，我们根据不同开发阶段遇到的问题，尝试总结出一些有参考意义的经验教训。</p>
+
+<h3 id="3-1-项目前期">3.1 项目前期</h3>
+
+<h4 id="3-1-1-交互关系">3.1.1 交互关系</h4>
+
+<p>在项目还未开始之前，我们需要做的第一件事，是考虑算法模块和其他模块之间的交互关系，这直接影响我们的代码框架，整体设计和后期维护。在我本人的开发工作中，调用关系主要分为两种：</p>
+
+<ul>
+<li>算法主动获取数据，并将计算结果写入数据库中</li>
+<li>算法提供调用接口，被动接收数据，进行计算，并返回结果</li>
+</ul>
+
+<p>我认为，影响我们选择调用关系的因素主要有两个：</p>
+
+<ul>
+<li>大数据环境的稳定性</li>
+<li>模型的实时性</li>
+</ul>
+
+<p>假如已经存在了稳定的大数据环境，且数据源的格式字段基本不变，那么主动调用是一种不错的交互方式：一方面，我们能够根据业务需求，将逻辑简单但计算量大的数据清洗和数据聚合放到大数据平台上完成；同时，避免了和大数据团队的对接工作，只需要保证数据库得到实时的维护即可，减轻了团队间的沟通成本。但假如大数据环境不稳定，或者数据格式在不断变化，那不适合采用这种方法。因为开发中，我们会耗费大量的时间和精力修改和优化获取数据和存储数据的接口。</p>
+
+<p>因此，在大数据环境不稳定的情况下，算法提供调用接口的方式对于算法模块的开发会更加的轻松。我们只需要设计好模块的调用接口，和大数据团队对接好数据格式即可。但这种情况下，我们需要注意三点：</p>
+
+<ol>
+<li>如果需要进行数据的预处理，需要把预处理逻辑完整清晰的和大数据团队对接清楚</li>
+<li>由于模型是被动调用，有时需要考虑高并发的问题</li>
+<li>在设计数据字段时，需要考虑到数据的获取逻辑，存储逻辑</li>
+</ol>
+
+<p>除此之外，模型的触发逻辑也是影响调用关系的重要因素。如果对模型的实时性要求较高，建议使用被动调用的方法：当大数据平台有新的数据入库时，实时调用模型模块，进行分析计算。如果实时性要求不高，则两种交互方式都满足要求。</p>
+
+<p>在本次项目中，由于原始数据格式复杂，且数据采集和模型模块是同步开发，数据格式难以在短时间内稳定，且需要模型实时的进行研判，返回结果，因此我们选用被动调用的模式。</p>
+
+<h4 id="3-1-2-框架选择">3.1.2 框架选择</h4>
+
+<p>在确定了交互方式之后，我们选择基础的技术框架，由于本人了解的框架有限，只能根据一些过往经验提供一些参考意见：</p>
+
+<ul>
+<li>首先要选择开发人员熟悉的框架。在快速的开发和迭代过程中，选择不熟悉的框架，学习采坑的时间成本较高</li>
+<li>框架应该尽可能选择成熟稳定，社区活跃，生态完整的框架。
+
+<ul>
+<li>成熟稳定保证了框架不存在重大的隐患，不会出现由于框架的原生问题妨碍功能开发的现象</li>
+<li>社区活跃保证了在遇到问题时，能够及时找到解决的方案</li>
+<li>生态完整能够在我们后期进行功能添加时，更加轻松</li>
+</ul></li>
+<li>个人倾向于使用轻量级、功能模块化较好，可自行根据需求进行增量开发的框架
+
+<ul>
+<li>主要是在开发的前期，可能存在需求不稳定的情况</li>
+<li>前期的开发，应该在保证基本功能的情况下，尽可能的快速，及时发现问题，进行调整</li>
+</ul></li>
+</ul>
+
+<p>基于以上几点的考虑，我们采用 flask 作为模型模块的核心框架，通过 web 服务的方式，提供模型调用的接口。</p>
+
+<h4 id="3-1-3-基础模块划分">3.1.3 基础模块划分</h4>
+
+<p>在开发之前，我们需要根据功能，进行一个简单的划分。</p>
+
+<p>在开发的初期，可能功能都十分的简单，甚至可以将所有的代码都放在一个文件中，但是基础的模块划分还是十分必要，我感觉这么做有几个优点：</p>
+
+<ol>
+<li>将基础的功能进行解耦，方便后续的进一步模块化开发。在复杂的项目中，为了保证项目的可维护行，模块间的解耦是必然的。而在早期就进行简单的模块划分，能为中后期的解耦和维护减轻时间成本</li>
+<li>在模块的划分的同时，我们肯定会进行目录结构和文件结构的设计，保证了整体代码的可读性</li>
+</ol>
+
+<p>但在这一阶段，个人感觉也没有必要过度的设计，只需要将核心的几个模块划分完毕即可，原因有以下几点：</p>
+
+<ol>
+<li>需求本身就存在不稳定性，前期的细节设计可能随着需求的变化而作废</li>
+<li>由于无法确定各个部分的代码膨胀情况，无法直接确定哪些部分需要做进一步的细分设计</li>
+<li>前期应该侧重于快速的开发出一个简单原型，在原型上进行细节修改</li>
+</ol>
+
+<p>因此，我们在第一版的模型框架代码中，只是简单的划分出了三个模块：</p>
+
+<ul>
+<li>API 接口</li>
+<li>核心处理逻辑，即算法</li>
+<li>日志</li>
+</ul>
+
+<h4 id="3-1-4-日志设计">3.1.4 日志设计</h4>
+
+<p>在设计日志之前，我们需要明确日志的作用，个人认为日志的作用主要有两个：</p>
+
+<ul>
+<li>在开发阶段，帮助我们 debug</li>
+<li>在运行阶段，帮助我们监控程序的运行状态</li>
+</ul>
+
+<p>现阶段的日志，更多要为项目的开发服务，帮助程序员 debug，因此日志至少要有以下内容：</p>
+
+<ul>
+<li>时间</li>
+<li>错误发生的文件的位置，具体到行号</li>
+<li>具体错误内容</li>
+<li>算法的运行情况（可视情况而定）</li>
+</ul>
+
+<p>同时在开发阶段，我们也可以通过在程序中加入日志写入的内容，来进行程序调试，方便我们定位具体的问题。</p>
+
+<p>在这里，我们要特别注意 <code>try...except...</code> 的使用。为了保证程序在运行过程中，不会因程序错误而崩溃，我们会在代码中加入 <code>try...except...</code> 来保证代码的鲁棒性。但个人建议，不要为了省事，将大段的代码都放在  <code>try...except...</code>，这会增加代码调试的难度。</p>
+
+<p>同时，由于加入了  <code>try...except...</code>，程序报错信息的行号会变成 <code>except</code> 所在位置，为了解决这一问题，可以使用 <code>traceback</code> 来追踪异常的具体位置。</p>
+
+<pre><code class="language-python">try:
+    pass
+except Exception as e:
+    # error 发生的具体文件
+    logger.error(e.__traceback__.tb_frame.f_globals[&quot;__file__&quot;])
+    # error 发生的具体行号
+    logger.error(e.__traceback__.tb_lineno)
+    logger.error(e)
+</code></pre>
+
+<h4 id="3-1-5-接口设计">3.1.5 接口设计</h4>
+
+<p>由于模型数量较多，且将由多人开发，因此很有必要在开发前，对 API 的接口进行严格的规范，主要包含以下内容：</p>
+
+<ul>
+<li>url 的格式规范</li>
+<li>接收数据的 json 格式</li>
+<li>返回数据的 json 格式</li>
+<li>状态码以及对应的内容</li>
+</ul>
+
+<p>在以上内容中，接收数据的 json 格式，建议不要直接将数据放入 json 中，而是在外层封装一层，来保证数据格式的灵活性，能够更加方便的根据需求添加 tag。格式如下：</p>
+
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    ...
+  },
+  &quot;tag&quot;: &quot;&quot;
+}
+</code></pre>
+
+<p>在设计数据格式时，最好规定每个字段都采用驼峰式的命名方式。虽然在 python 中，下划线的命名方式更为普遍，但 json 数据格式涉及到和大数据平台的交互。而现有的大数据框架，普遍采用驼峰式的命名方式。采用驼峰式的命名方式，可以方便后期的数据对接。</p>
+
+<p>在设计好接口后，还需要规范接口文档的整体格式和具体内容，之后每开发一个接口，都要按照文档要求撰写对应的接口内容。</p>
+
+<h4 id="3-1-6-基类抽象">3.1.6 基类抽象</h4>
+
+<p>对于项目中重复出现的代码块，有必要进行一定的抽象，方便代码的复用，后期的修改，并加速开发的流程。</p>
+
+<p>在这里，我比较推荐三次原则，即当某个功能第三次出现时，才进行&rdquo;抽象化&rdquo;。该原则是 Martin Fowler 在《Refactoring》一书中提出的。它的涵义是，第一次用到某个功能时，你写一个特定的解决方法；第二次又用到的时候，你拷贝上一次的代码；第三次出现的时候，你才着手&rdquo;抽象化&rdquo;，写出通用的解决方法。</p>
+
+<p>这样做有几个理由：</p>
+
+<ol>
+<li>省事。如果一种功能只有一到两个地方会用到，就不需要在&rdquo;抽象化&rdquo;上面耗费时间了。</li>
+<li>容易发现模式。&rdquo;抽象化&rdquo;需要找到问题的模式，问题出现的场合越多，就越容易看出模式，从而可以更准确地&rdquo;抽象化&rdquo;。</li>
+<li>防止过度冗余。如果一种功能同时有多个实现，管理起来非常麻烦，修改的时候需要修改多处。</li>
+</ol>
+
+<p>在本项目中，我根据项目中，模型的特征，抽象出模型的一般性基类，方便了后续的开发和修改。以下基类的代码骨架:</p>
+
+<pre><code class="language-python">class BasicModel:
+    def __init__(self, data):
+        self.data = data
+    
+    def _check_data(self):
+        return True
+      
+    def _process_data(self):
+        return None
+      
+    def process(self):
+        if self._check_data() is True:
+            return self._process_data()
+        else:
+            return ...
+</code></pre>
+
+<p>所有的子类重写 <code>_check_data</code> 和 <code>_process_data</code>  方法，外部模块直接调用 <code>process</code> 方法。</p>
+
+<p>在项目的开发中期，我们发现需要在所有的接收数据中新增一个字段 &ldquo;id&rdquo;，由于我们对基类做了抽象，可以直接在基类上做相关的数据校验的修改，不需要修改每一个模型子类的代码。</p>
+
+<h3 id="3-2-项目中期">3.2 项目中期</h3>
+
+<h4 id="3-2-1-模块进一步细化">3.2.1 模块进一步细化</h4>
+
+<p>当功能开发到一定阶段时，简单的模块细分已经无法保证代码的可维护性，需要将复杂的模块进行进一步的细分。</p>
+
+<p>在本项目中，代码膨胀速度最快的是 API 部分，因此我们选用 <code>blueprint</code> 对 API 进行统一的管理，使代码的结构更加清晰合理。</p>
+
+<p>在模块细分过程中，个人感觉重要的一点就是，各个子模块在功能粒度上应该具有一致性，即各个子模块应该有相近的抽象层次。我们不能单纯的根据代码量对模块进行细分，这可能会导致模块内部的层次结构的混乱。</p>
+
+<h4 id="3-2-2-自动化单元测试">3.2.2 自动化单元测试</h4>
+
+<p>自动化的单元测试能够极大的提升开发的效率，帮助我们进行模块的功能自测，保证代码的质量。因此在完成了基础功能的开发后，应该在第一时间实现自动化的单元测试。</p>
+
+<p>python 本身自带了单元测试模块 <code>unittest</code> 。在本项目中，我们使用 <code>Flask-testing</code> 更方便的实现模块的单元测试。</p>
+
+<p>使用统一的单元测试模块的另一好处是，可以在进行功能测试的同时，做一些简单的性能测试，更加方便的进行后续的性能优化。我们可以使用修饰器函数，查看函数的性能。只需要对单元测试进行修饰，就可以获得各个单元模块的性能信息。</p>
+
+<pre><code class="language-python">def timetest(func):
+
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        func(*args, **kwargs)
+        end = time.time()
+        print(&quot;\ntime: &quot;, (end-start)*1000 // 1, &quot;ms&quot;)
+
+    return wrapped
+</code></pre>
+
+<h4 id="3-2-3-code-review">3.2.3 Code Review</h4>
+
+<p>在项目的开发过程中，需要时不时的进行一下 Code Review，如果将 Code Review 放到项目的后期，可能会出现以下问题：</p>
+
+<ul>
+<li>Code Review 工作量过大，导致没有时间进行完整的 Code Review</li>
+<li>在开发的前期，发现问题，进行修改的时间成本和人力成本远小于项目后期再进行修改</li>
+<li>前期代码中存在的问题，会影响甚至劣化后续的项目开发</li>
+</ul>
+
+<p>因此在项目开发的前中期，就可以阶段性的进行 Code Review，这样能够及时的发现问题，工作量也会小很多。</p>
+
+<p>Code Review 主要包含以下内容：</p>
+
+<ul>
+<li>代码风格检查。包括变量名，函数名，模块名的命名方式等，务必保证整体项目的代码风格统一。</li>
+<li>代码逻辑检查。主要是检查代码逻辑是否正确，是否考虑到了各种复杂边界情况。</li>
+<li>代码优化。从数据结构和数据流程的角度，适当优化代码的性能。不过在项目的前中期，不要将过多的时间和精力放在优化上。过早的优化会提高代码结构的复杂性，使可读性和可维护行下降，对后续的功能开发造成负面影响。</li>
+</ul>
+
+<h3 id="3-3-项目后期">3.3 项目后期</h3>
+
+<h4 id="3-3-1-性能测试">3.3.1 性能测试</h4>
+
+<p>在进行性能优化之前，先需要进行性能的测试，找到模块性能较差的部分，对其进行优化。</p>
+
+<p>一个简单的方法是像上文中所说的那样，在单元测试模块进行简单的测试，这种方法的优势是，代码量较少，因为已经有现成的 url 地址和测试数据，不需要再进行配置。当接口较多时，这是一种非常简便的方法。但该方法得到的性能数据并不准确。个人建议的测试流程是：</p>
+
+<ul>
+<li>用简易但不准确的方法，粗略的测试出模块的性能，找到相对性能较差的部分</li>
+<li>对性能不足的部分进行优化</li>
+<li>使用更为完善系统的方案进行统一的性能测试</li>
+</ul>
+
+<h4 id="3-3-2-单进程性能优化">3.3.2 单进程性能优化</h4>
+
+<p>对于计算机来说，对代码性能的影响主要来自两个方面：</p>
+
+<ul>
+<li>CPU 的计算能力</li>
+<li>I/O 的压力</li>
+</ul>
+
+<p>如果 CPU 的算力存在瓶颈，那么优先从数据结构入手进行优化，分析各个部分的时间复杂度，通过更加合理的数据结构和算法，实现复杂度的优化。</p>
+
+<p>如果是大量的 I/O 导致了性能的下降，我们应该减少重复的 I/O。</p>
+
+<p>在本项目中，有的模型需要加载较大的配置文件，且不会对文件的内容做修改，我们通过 <code>flask_caching</code> 模块，将这些文件的内容统一放在缓存中，避免了文件的重复加载。</p>
+
+<h4 id="3-3-3-高并发支持">3.3.3 高并发支持</h4>
+
+<p>由于模型的触发十分频繁，存在高并发的情况，而 flask 本身是默认是单进程，其并发性并不好，需要加入额外的模块进行支持。</p>
+
+<p>在本项目中，我们使用了以下模块实现了模型的高并发支持：</p>
+
+<ul>
+<li>使用 Nginx 实现多台主机的负载均衡</li>
+<li>使用 Gunicorn 实现 flask 的多进程关联</li>
+<li>使用 gevent 提高每个进程的并发能力</li>
+</ul>
+
+<p>这些都是相对而言成熟的技术，网上也有大量的配置文章，就不在这里一一赘述。</p>
+
+<h4 id="3-3-4-后台监控">3.3.4 后台监控</h4>
+
+<p>为了保证程序的正常运行，我们必须有后台监控机制，监控程序的运行状态，当程序出现问题时，及时的进行重启。</p>
+
+<p>在本项目中，我们使用 <code>supervisor</code> 实现程序的后台监控。</p>
+
+<p>使用 <code>supervisor</code> 的另一个好处是，当需要联调和更新代码时，可以直接用 <code>supervisorctl</code> 控制进程的启动和停止，非常的方便。</p>
+
+<h4 id="3-3-5-项目部署">3.3.5 项目部署</h4>
+
+<p>项目的部署方式主要有两种：</p>
+
+<ul>
+<li>开发部署脚本，直接在主机上部署</li>
+<li>直接使用 docker compose 部署</li>
+</ul>
+
+<p>个人更加喜欢 docker compose 的部署方式，但如果主机本身就是虚拟机，再使用 docker 可能存在不稳定的问题。</p>
+
+<h2 id="4-非技术内容总结">4. 非技术内容总结</h2>
+
+<p>上面的内容，主要是我们在项目开发中，技术内容的总结，以下内容，更多的是关于非技术内容的总结，也是本次项目给我感受最深的一些部分。</p>
+
+<h3 id="4-1-如何写出优秀的代码">4.1 如何写出优秀的代码？</h3>
+
+<p>这是一个一直以来都困扰我的问题，什么样的代码算是好的代码，我们如何写出好的代码。市面上的书籍从技术角度谈了很多。但在本次项目中，我对其的理解更多在技术之外。</p>
+
+<p>在讨论如何写代码之前，我们应该先思考一下，代码本质上是在干什么？我认为，代码做的事情，就是将现实世界的具体问题，分解为电脑可以处理的逻辑运算和数值运算。它就像有个方程，输入是现实空间的问题，输出的是逻辑运算和数值计算。如果仅从纯技术的角度看问题，我们会更多的陷入逻辑运算和数值运算当中，而忽律问题本身。</p>
+
+<p>因此，一切的起点应该是对现实问题本身的理解和思考，所谓的编程范式，其本质是对现实问题的解构方法（个人理解），而优秀的代码，一定是基于对于业务本身深入理解上的技术再构造。回到项目本身，我们在项目开发中，应该基于两条逻辑线路，进行开发，其分别为：</p>
+
+<ul>
+<li>业务流的角度</li>
+<li>数据流的角度</li>
+</ul>
+
+<p>这两条线路很多时候存在重复和交叉，需要我们在开发过程中不断的加深理解。从业务的角度入手，设计和组织整体的代码结构，从技术的角度入手，进行代码的细节调整和性能优化。</p>
+
+<h3 id="4-2-从数据源开始">4.2 从数据源开始</h3>
+
+<p>从模型的角度来说，数据是一切的起点和基础。而本项目的一个核心问题就是，在开发模型逻辑时，没有具体的数据进行支持。这需要我们对于各个字段的内容，有深入的理解。</p>
+
+<p>举例来说，模型的部分数据源为主机进程的信息，其中一个重要数据字段是程序运行时间。如果简单的看字段说明，我们会理所当然的认为这个字段代表了进程运行的总时间。其实该字段是通过 <code>ps -ef</code> 的方法得到的。如果我们具体查一下，就会发现，该时间代表了进程的 CPU 时间。假如将该字段作为进程运行的时间，输入模型进行研判，必然导致错误的结果。</p>
+
+<p>从这个例子可以看到，我们在开发之前，必须对数据的各个字段内容进行具体的梳理，包括：</p>
+
+<ul>
+<li>每个字段都是通过什么渠道获取的</li>
+<li>这些数据是否可靠</li>
+<li>每个字段的具体含义和格式是什么</li>
+<li>字段和业务逻辑具有什么样的关系</li>
+<li>需要对原始数据做什么预处理</li>
+</ul>
+
+<h3 id="4-3-与其他部门的对接">4.3 与其他部门的对接</h3>
+
+<p>在项目的开发过程中，存在大量的跨部门对接。从模型模块来说，需要频繁的与大数据进行对接，而对接的过程中，会发现很多问题。</p>
+
+<p>从模型的角度来说，我们似乎只要完成模型的逻辑，但在实际对接中，我们需要考虑的问题有很多，包括：</p>
+
+<ul>
+<li>模型的触发条件和触发逻辑</li>
+<li>模型能否支持批处理</li>
+<li>模型输出的结果如何进行存储</li>
+<li>如果单个模型需要不同的数据源，如何进行数据的聚合</li>
+<li>模型返回的数据具有什么样的意义</li>
+<li>如果需要前台界面展示，应该展示哪些数据</li>
+</ul>
+
+<p>在模型开发中，一个真实的例子就是，我们在和平台对接过程中，双方在初期都没有考虑数据存储的问题，导致模型返回的数据无法进行有效的关联，因此需要统一修改模型的输入数据格式和返回数据格式。好在数据的格式设计的较为灵活，且我们对模型做了基类的抽象，不需要对代码进行大量的修改。</p>
+
+<p>在对接过程中，我们不仅要对接数据，更需要和其他部门解释清楚数据和业务的关联关系。在特定场合中，算法的输出结果可能较为抽象，这会对后续的数据处理，尤其是前台展示造成一定的困扰。如果存在前台展示的需求，个人感觉算法部门应该积极的介入其中，原因有两个：</p>
+
+<ul>
+<li>前端部门很多时候并不理解数据的具体含义，需要算法部门提供相应的支持，否则展示效果会大打折扣</li>
+<li>部分模型的输出字段和输出内容，可能会暴露内部的业务流程信息和处理逻辑，存在数据泄露的风险，这一点需要算法部门进行评估。</li>
+</ul>
+
+<h3 id="4-4-如何分配工作-多人协同开发">4.4 如何分配工作，多人协同开发</h3>
+
+<p>以前的开发工作，基本都是我一个人独立完成，本次项目的开发，是我真正意义上参与的多人协同开发，其中遇到了不少问题：</p>
+
+<ul>
+<li>各人的代码风格不同，代码质量也不同，因此需要在开发前，对代码风格进行严格的规定，并及时的进行 Code Review</li>
+<li>由于涉及多人协作，必须保证代码的可读性。保证参与开发的每个人，都能理解代码的逻辑和功能。</li>
+<li>Gitlab 对文档的支持存在一定问题，导致文档容易出现错位的问题</li>
+<li>根据各人的开发能力和对业务的理解程度，分配工作内容</li>
+<li>需要在项目进度和构架设计之间保持平衡，过多的设计会拖慢开发进程，但设计不足会导致代码难以维护，增加后续的开发难度</li>
+</ul>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="https://Hanfeng.ink/post/tinyhttpd/">Tinyhttpd 源码解析</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/git_core/">Git 原理解析</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/life_and_happiness/">接纳自我，拥抱生活</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/coroutine/">协程简介</a></li>
+        
+        <li><a href="https://Hanfeng.ink/post/understand_glibc_malloc/">深入理解 malloc</a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="https://Hanfeng.ink/tags/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91">项目开发</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://Hanfeng.ink/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/project_thinking/" title="项目开发总结">项目开发总结</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/tinyhttpd/" title="Tinyhttpd 源码解析">Tinyhttpd 源码解析</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/git_core/" title="Git 原理解析">Git 原理解析</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/life_and_happiness/" title="接纳自我，拥抱生活">接纳自我，拥抱生活</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/coroutine/" title="协程简介">协程简介</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/understand_glibc_malloc/" title="深入理解 malloc">深入理解 malloc</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_debug_info/" title="调试器工作原理：第三部分 调试信息">调试器工作原理：第三部分 调试信息</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_breakpoint/" title="调试器工作原理：第二部分 断点">调试器工作原理：第二部分 断点</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/gdb_basic/" title="调试器工作原理：第一部分 基础">调试器工作原理：第一部分 基础</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/post/os_compiler_map/" title="操作系统 &amp; 编译原理 学习攻略">操作系统 &amp; 编译原理 学习攻略</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/python/">python(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">实现原理(1)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统(8)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">数据结构和算法(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习(4)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E6%9D%82%E8%AE%B0/">杂记(3)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络(1)</a>
+    </li>
+    
+    <li>
+        <a href="https://Hanfeng.ink/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发(1)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="https://Hanfeng.ink/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>
+    
+    <a href="https://Hanfeng.ink/tags/git/">git</a>
+    
+    <a href="https://Hanfeng.ink/tags/leetcode/">leetcode</a>
+    
+    <a href="https://Hanfeng.ink/tags/linux/">linux</a>
+    
+    <a href="https://Hanfeng.ink/tags/python/">python</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BC%98%E5%8C%96/">优化</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BD%8D%E6%93%8D%E4%BD%9C/">位操作</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E4%BF%A1%E6%81%AF%E8%AE%BA/">信息论</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%86%85%E5%AD%98/">内存</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%86%E7%B1%BB/">分类</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%88%A4%E5%88%AB%E6%A8%A1%E5%9E%8B/">判别模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%86%E5%8F%B2/">历史</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">原理解析</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%96%87%E5%AD%A6/">文学</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%89%B9%E5%BE%81%E5%80%BC%E5%88%86%E8%A7%A3/">特征值分解</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">生成模型</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AC%94%E8%AE%B0/">笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%AE%97%E6%B3%95/">算法</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BA%BF%E7%A8%8B/">线程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">编译原理</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E8%BF%9B%E7%A8%8B/">进程</a>
+    
+    <a href="https://Hanfeng.ink/tags/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://Hanfeng.ink/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="https://Hanfeng.ink/">寒枫的博客 By Hanfeng Zhang</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="https://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://Hanfeng.ink/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="https://Hanfeng.ink/js/totop.js?v=0.0.0" async=""></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-134764313-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+<script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+  <script src="https://Hanfeng.ink/js/douban.js"></script>
+
+</body>
+</html>
