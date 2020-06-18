@@ -1,7 +1,41 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+    <script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
 
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
     <meta charset="utf-8">
     <meta name="generator" content="Hugo 0.53" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -241,7 +275,7 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
 
 <h4 id="当需要判断一个元素是否在队列中时-最好用集合-不要用列表">当需要判断一个元素是否在队列中时，最好用集合，不要用列表</h4>
 
-<p>针对列表的<code>in</code>方法，实际是遍历整个列表，复杂度为 $O(n)$，而对集合与字典本质上是哈希表，对其的<code>in</code>方法复杂度为 $O(1)$</p>
+<p>针对列表的<code>in</code>方法，实际是遍历整个列表，复杂度为 $ O(n) $，而对集合与字典本质上是哈希表，对其的<code>in</code>方法复杂度为 $ O(1) $</p>
 
 <h4 id="当需要用-if-else-做大量的分支判断-且分支判断的方法为-时-最好使用字典的方式">当需要用<code>if else</code>做大量的分支判断，且分支判断的方法为<code>==</code>时，最好使用字典的方式</h4>
 
@@ -277,7 +311,7 @@ array_resize(arrayobject *self, Py_ssize_t newsize)
 <h4 id="尽量避免创建过大的字典">尽量避免创建过大的字典</h4>
 
 <p>字典的本质是哈希表，关于哈希表的原理，可以阅读《算法导论》第11章。我们知道，哈希表的扩张会消耗大量的时间，而python的<code>dict</code>默认的最小长度是16
-每次改变大小时，当哈希表的装载因子大于0.5或小于0.1时，哈希表将重新散列，<code>slot</code>的个数为现有元素的3.3倍，并保证是 $2^n$，<code>Python 3.6</code> <a href="https://github.com/python/cpython/blob/3.6/Modules/hashtable.c">源代码</a>如下：</p>
+每次改变大小时，当哈希表的装载因子大于0.5或小于0.1时，哈希表将重新散列，<code>slot</code>的个数为现有元素的3.3倍，并保证是 $ 2^n $，<code>Python 3.6</code> <a href="https://github.com/python/cpython/blob/3.6/Modules/hashtable.c">源代码</a>如下：</p>
 
 <pre><code class="language-c">...
 #define HASHTABLE_MIN_SIZE 16
@@ -483,7 +517,7 @@ def merge(L,k):
 
 <p>将RGB颜色转化为灰值的计算：</p>
 
-<p>$$Gray = 0.299R +  0.587G + 0.114B$$</p>
+<p>$$ Gray = 0.299R +  0.587G + 0.114B $$</p>
 
 <p>由于R,G,B均为 0~255的整型变量，因此可以预先计算好所有结果，并将其存放到一个大的数组中。由于我们需要对每个像素点的数值进行变换，预计算可以极大的优化整体性能。</p>
 
