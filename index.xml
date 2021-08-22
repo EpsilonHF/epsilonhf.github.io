@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
-    <lastBuildDate>Sat, 23 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 21 Aug 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://Hanfeng.ink/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>阅读和写作</title>
+      <link>https://Hanfeng.ink/post/reading_and_writing/</link>
+      <pubDate>Sat, 21 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://Hanfeng.ink/post/reading_and_writing/</guid>
+      <description>&lt;p&gt;读《人性的枷锁》，忽有所感。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>项目开发总结</title>

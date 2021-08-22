@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://Hanfeng.ink/post/reading_and_writing/</loc>
+    <lastmod>2021-08-21T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://Hanfeng.ink/post/project_thinking/</loc>
     <lastmod>2020-05-23T00:00:00+00:00</lastmod>
   </url>
@@ -163,19 +168,19 @@
   
   <url>
     <loc>https://Hanfeng.ink/post/</loc>
-    <lastmod>2020-05-23T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://Hanfeng.ink/categories/python/</loc>
-    <lastmod>2019-06-29T00:00:00+00:00</lastmod>
+    <lastmod>2021-08-21T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://Hanfeng.ink/tags/python/</loc>
     <lastmod>2019-11-03T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://Hanfeng.ink/categories/python/</loc>
+    <lastmod>2019-06-29T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -241,7 +246,7 @@
   
   <url>
     <loc>https://Hanfeng.ink/</loc>
-    <lastmod>2020-05-23T00:00:00+00:00</lastmod>
+    <lastmod>2021-08-21T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -250,13 +255,13 @@
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
+    <loc>https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
     <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
+    <loc>https://Hanfeng.ink/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
     <lastmod>2019-11-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
@@ -280,20 +285,20 @@
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
-    <lastmod>2019-05-19T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>https://Hanfeng.ink/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2019-05-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>https://Hanfeng.ink/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2019-05-19T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://Hanfeng.ink/categories/%E6%9D%82%E8%AE%B0/</loc>
-    <lastmod>2019-11-05T00:00:00+00:00</lastmod>
+    <lastmod>2021-08-21T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -311,7 +316,7 @@
   
   <url>
     <loc>https://Hanfeng.ink/tags/%E7%AC%94%E8%AE%B0/</loc>
-    <lastmod>2019-11-05T00:00:00+00:00</lastmod>
+    <lastmod>2021-08-21T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -340,13 +345,13 @@
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</loc>
+    <loc>https://Hanfeng.ink/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</loc>
     <lastmod>2020-04-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</loc>
+    <loc>https://Hanfeng.ink/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</loc>
     <lastmod>2020-04-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
@@ -364,13 +369,13 @@
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/</loc>
+    <loc>https://Hanfeng.ink/tags/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/</loc>
     <lastmod>2020-05-23T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://Hanfeng.ink/tags/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/</loc>
+    <loc>https://Hanfeng.ink/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/</loc>
     <lastmod>2020-05-23T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
